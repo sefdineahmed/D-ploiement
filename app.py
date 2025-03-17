@@ -2,128 +2,159 @@ import streamlit as st
 import pandas as pd
 import joblib
 import tensorflow as tf
-import numpy as np
 import plotly.express as px
 from PIL import Image
 
-# Configuration initiale OBLIGATOIRE en première commande
+# Configuration initiale DEVEUT ÊTRE EN PREMIER
 st.set_page_config(
-    page_title="OncoPredict - Cancer Gastrique",
+    page_title="OncoSuite - Cancer Gastrique",
     page_icon="🩺",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS (après set_page_config)
-st.markdown("""
-<style>
-    .main {background: #f8f9fa;}
-    .stButton>button {border-radius: 8px;}
-    .stTabs [role="tab"] {font-size: 16px; padding: 12px;}
-    .pred-value {font-size: 24px !important; color: #2e86c1;}
-</style>
-""", unsafe_allow_html=True)
-
-# Configuration des modèles
+# ----------------------------------------------------------
+# Configuration des données et modèles
+# ----------------------------------------------------------
 MODELS = {
     "Cox PH": "models/coxph.joblib",
-    "RSF": "models/rsf.joblib", 
-    "GBST": "models/gbst.joblib",
-    "DeepSurv": "models/deepsurv.keras"
+    "Random Survival Forest": "models/rsf.joblib",
+    "GBST": "models/gbst.joblib"
 }
 
-VARIABLES = {
-    'Cardiopathie': "Cardiopathie associée",
-    'Ulceregastrique': "Antécédent d'ulcère",
+FEATURES = {
+    'Cardiopathie': "Cardiopathie",
+    'Ulceregastrique': "Ulcère gastrique",
     'Douleurepigastrique': "Douleur épigastrique",
     'Ulcero-bourgeonnant': "Lésion ulcéro-bourgeonnante",
-    'Denutrution': "Dénutrition sévère",
-    'Tabac': "Consommation tabagique",
+    'Denutrution': "Dénutrition",
+    'Tabac': "Tabagisme actif",
     'Mucineux': "Type mucineux",
     'Infiltrant': "Type infiltrant",
-    'Stenosant': "Type sténosant", 
-    'Metastases': "Métastases avérées",
+    'Stenosant': "Type sténosant",
+    'Metastases': "Métastases",
     'Adenopathie': "Adénopathie"
 }
 
-@tf.keras.utils.register_keras_serializable()
-def cox_loss(y_true, y_pred):
-    """Fonction de perte custom pour DeepSurv"""
-    # (Conserver l'implémentation existante)
-    return ...  
+# ----------------------------------------------------------
+# Fonctions utilitaires
+# ----------------------------------------------------------
+def load_data():
+    """Charge les données depuis le fichier Excel"""
+    return pd.read_excel("data/GastricCancerData.xlsx")
 
-def load_models():
-    """Charge les modèles avec gestion d'erreur"""
-    models = {}
+def load_model(model_path):
+    """Charge un modèle avec gestion d'erreur"""
     try:
-        for name, path in MODELS.items():
-            if path.endswith('.keras'):
-                models[name] = tf.keras.models.load_model(
-                    path, custom_objects={'cox_loss': cox_loss})
-            else:
-                models[name] = joblib.load(path)
-        return models
+        if model_path.endswith(".keras"):
+            return tf.keras.models.load_model(model_path)
+        return joblib.load(model_path)
     except Exception as e:
-        st.error(f"Erreur de chargement des modèles: {str(e)}")
+        st.error(f"Erreur de chargement du modèle: {str(e)}")
         return None
 
-def create_sidebar():
-    """Crée la sidebar avec formulaire"""
+# ----------------------------------------------------------
+# Sections de l'application
+# ----------------------------------------------------------
+def accueil():
+    st.title("🩺 OncoSuite - Plateforme d'Aide à la Décision")
+    st.image("assets/header.jpg", use_column_width=True)
+    st.markdown("""
+    **Bienvenue dans l'interface de prédiction du temps de survie des patients atteints de cancer gastrique.**
+    
+    Naviguez via le menu latéral pour :
+    - 📊 Explorer les données cliniques
+    - 🔍 Analyser les statistiques descriptives
+    - 🤖 Utiliser les modèles prédictifs
+    - 📩 Nous contacter
+    """)
+
+def analyse_descriptive():
+    st.title("📊 Analyse Descriptive")
+    df = load_data()
+    
+    with st.expander("Aperçu des données brutes"):
+        st.dataframe(df.head())
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Distribution des Variables")
+        selected_var = st.selectbox("Choisir une variable", df.columns)
+        fig = px.histogram(df, x=selected_var)
+        st.plotly_chart(fig)
+    
+    with col2:
+        st.subheader("Corrélations Cliniques")
+        corr_matrix = df.corr()
+        fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r')
+        st.plotly_chart(fig)
+
+def modelisation():
+    st.title("🤖 Interface de Prédiction")
+    
+    # Formulaire patient
     with st.sidebar:
-        st.title("📋 Formulaire Patient")
-        inputs = {}
-        for var, label in VARIABLES.items():
-            inputs[var] = st.selectbox(label, ["Non", "Oui"])
-        return pd.DataFrame({k: [1 if v == "Oui" else 0] for k, v in inputs.items()})
-
-def display_predictions(models, data):
-    """Affiche les résultats dans des onglets"""
-    tabs = st.templates.Tabs(MODELS.keys())
+        st.header("📋 Paramètres du Patient")
+        inputs = {feature: st.radio(label, ["Non", "Oui"]) 
+                for feature, label in FEATURES.items()}
+        input_df = pd.DataFrame({k: [1 if v == "Oui" else 0] 
+                               for k, v in inputs.items()})
     
-    for i, (name, model) in enumerate(models.items()):
-        with tabs[i]:
-            st.header(f"Modèle {name}")
-            
-            try:
-                if name == "DeepSurv":
-                    pred = model.predict(data).flatten()[0]
-                else:
-                    pred = model.predict(data)[0]
-                
-                st.markdown(f"<div class='pred-value'>{pred:.1f} mois</div>", 
-                           unsafe_allow_html=True)
-                
-                # Visualisation supplémentaire
-                fig = px.bar(x=[pred], labels={'x':'Mois', 'y':'Survie'}, 
-                            title="Prédiction de survie")
-                st.plotly_chart(fig, use_container_width=True)
-                
-            except Exception as e:
-                st.error(f"Erreur de prédiction: {str(e)}")
+    # Affichage résultats
+    tab1, tab2, tab3 = st.tabs(list(MODELS.keys()))
+    
+    for model_name, tab in zip(MODELS.keys(), [tab1, tab2, tab3]):
+        with tab:
+            model = load_model(MODELS[model_name])
+            if model:
+                try:
+                    prediction = model.predict(input_df)[0]
+                    st.metric("Survie médiane estimée", 
+                            f"{prediction:.1f} mois",
+                            help="Prédiction basée sur les données cliniques actuelles")
+                    st.progress(min(int(prediction/120*100), 100))
+                except Exception as e:
+                    st.error(f"Erreur de prédiction: {str(e)}")
 
+def a_propos():
+    st.title("📚 À Propos")
+    st.markdown("""
+    **Version**: 1.0.0  
+    **Dernière mise à jour**: 15 mai 2024  
+    **Équipe Médicale**:
+    - Dr. Alioune Diop (Oncologue)
+    - Pr. Aminata Ndiaye (Chirurgien Digestif)
+    - M. Jean Dupont (Data Scientist)
+    """)
+    st.image("assets/team.jpg", width=600)
+
+def contact():
+    st.title("📩 Nous Contacter")
+    with st.form("contact_form"):
+        name = st.text_input("Nom complet")
+        email = st.text_input("Email")
+        message = st.text_area("Message")
+        if st.form_submit_button("Envoyer"):
+            st.success("Message envoyé avec succès!")
+
+# ----------------------------------------------------------
+# Navigation Principale
+# ----------------------------------------------------------
 def main():
-    """Point d'entrée principal de l'application"""
-    st.title("🩺 OncoPredict - Aide à la décision clinique")
-    st.markdown("---")
+    pages = {
+        "Accueil": accueil,
+        "Analyse des Données": analyse_descriptive,
+        "Modélisation": modelisation,
+        "À Propos": a_propos,
+        "Contact": contact
+    }
     
-    # Chargement des données et modèles
-    data = create_sidebar()
-    models = load_models()
+    # Menu latéral
+    st.sidebar.title("Navigation")
+    selection = st.sidebar.radio("", list(pages.keys()))
     
-    if not models:
-        st.stop()
-    
-    # Affichage principal
-    display_predictions(models, data)
-    
-    # Section d'information
-    with st.expander("📚 Documentation technique"):
-        st.markdown("""
-        ### Configuration technique
-        - **Version**: 1.2.0
-        - **Environnement** : Python 3.12
-        - **Dépendances** : Voir requirements.txt
-        """)
+    # Affichage de la page sélectionnée
+    pages[selection]()
 
 if __name__ == "__main__":
     main()
