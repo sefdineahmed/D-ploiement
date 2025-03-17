@@ -4,8 +4,11 @@ import pandas as pd
 import joblib
 import tensorflow as tf
 import plotly.express as px
+from PIL import Image
 
-# Configuration initiale
+# ----------------------------------------------------------
+# Configuration de l'application
+# ----------------------------------------------------------
 st.set_page_config(
     page_title="OncoSuite - Cancer Gastrique",
     page_icon="🩺",
@@ -13,31 +16,47 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ----------------------------------------------------------
-# Chargement sécurisé des modèles et données
-# ----------------------------------------------------------
-DATA_PATH = "data/GastricCancerData.xlsx"
-MODEL_PATHS = {
+# Chargement des images
+LOGO_PATH = "assets/header.jpg"
+
+# Chargement des modèles et des données
+MODELS = {
     "Cox PH": "models/coxph.joblib",
     "RSF": "models/rsf.joblib",
     "GBST": "models/gbst.joblib"
 }
 
-FEATURES = [
-    "Cardiopathie", "Ulceregastrique", "Douleurepigastrique", "Ulcero-bourgeonnant",
-    "Denutrution", "Tabac", "Mucineux", "Infiltrant", "Stenosant", "Metastases", "Adenopathie"
-]
+DATA_PATH = "data/GastricCancerData.xlsx"
 
+FEATURE_CONFIG = {
+    "Cardiopathie": "Cardiopathie",
+    "Ulceregastrique": "Ulcère gastrique",
+    "Douleurepigastrique": "Douleur épigastrique",
+    "Ulcero-bourgeonnant": "Lésion ulcéro-bourgeonnante",
+    "Denutrution": "Dénutrition",
+    "Tabac": "Tabagisme actif",
+    "Mucineux": "Type mucineux",
+    "Infiltrant": "Type infiltrant",
+    "Stenosant": "Type sténosant",
+    "Metastases": "Métastases",
+    "Adenopathie": "Adénopathie"
+}
+
+# ----------------------------------------------------------
+# Fonctions Utilitaires
+# ----------------------------------------------------------
+@st.cache_data
 def load_data():
-    """Charge les données depuis un fichier Excel si disponible."""
+    """Charge les données depuis le fichier Excel."""
     if os.path.exists(DATA_PATH):
         return pd.read_excel(DATA_PATH)
     else:
         st.error(f"❌ Fichier introuvable : {DATA_PATH}")
         return pd.DataFrame()
 
+@st.cache_resource
 def load_model(model_path):
-    """Charge un modèle avec vérification d'existence."""
+    """Charge un modèle en gérant les erreurs."""
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
         return None
@@ -46,22 +65,26 @@ def load_model(model_path):
             return tf.keras.models.load_model(model_path)
         return joblib.load(model_path)
     except Exception as e:
-        st.error(f"❌ Erreur de chargement du modèle : {e}")
+        st.error(f"❌ Erreur lors du chargement du modèle : {e}")
         return None
 
 def encode_features(inputs):
-    """Transforme les entrées en valeurs binaires (0/1)."""
-    return pd.DataFrame({k: [1 if v == "Oui" else 0] for k, v in inputs.items()})
+    """Encode les entrées utilisateur sous format numérique."""
+    return pd.DataFrame({k: [1 if v == "OUI" else 0] for k, v in inputs.items()})
 
 # ----------------------------------------------------------
-# Définition des pages
+# Pages de l'application
 # ----------------------------------------------------------
 def accueil():
-    st.title("🩺 OncoSuite - Plateforme d'Aide à la Décision")
-    st.markdown("""
-    **Estimation du temps de survie post-traitement du cancer gastrique**
-    """)
-
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.image(LOGO_PATH, width=200)
+    with col2:
+        st.title("🩺 OncoSuite - Plateforme d'Aide à la Décision")
+        st.markdown("""
+        **Estimation du temps de survie post-traitement du cancer gastrique**
+        """)
+    
     st.markdown("---")
     st.write("""
     ### Fonctionnalités principales :
@@ -76,11 +99,11 @@ def analyse_descriptive():
     df = load_data()
     if df.empty:
         return
-
+    
     with st.expander("🔍 Aperçu des données brutes", expanded=True):
         st.dataframe(df.head(10))
         st.write(f"📌 Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
-    
+
     st.markdown("---")
     col1, col2 = st.columns(2)
     
@@ -89,7 +112,7 @@ def analyse_descriptive():
         selected_var = st.selectbox("Choisir une variable", df.columns)
         fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
         st.plotly_chart(fig, use_container_width=True)
-    
+
     with col2:
         st.subheader("🌡 Matrice de corrélation")
         corr_matrix = df.corr()
@@ -98,26 +121,26 @@ def analyse_descriptive():
 
 def modelisation():
     st.title("🤖 Prédiction de Survie")
-    
+
     with st.expander("📋 Paramètres du patient", expanded=True):
-        inputs = {feature: st.radio(feature, ["Non", "Oui"], horizontal=True) for feature in FEATURES}
-
-    input_df = encode_features(inputs)
-    st.markdown("---")
-
-    # Onglets des modèles alignés en haut
-    tabs = st.tabs(list(MODEL_PATHS.keys()))
+        inputs = {}
+        cols = st.columns(3)
+        for i, (feature, label) in enumerate(FEATURE_CONFIG.items()):
+            with cols[i % 3]:
+                inputs[feature] = st.radio(label, ["Non", "Oui"], horizontal=True)
     
-    for tab, model_name in zip(tabs, MODEL_PATHS.keys()):
+    input_df = encode_features(inputs)
+
+    st.markdown("---")
+    tabs = st.tabs(list(MODELS.keys()))
+
+    for tab, model_name in zip(tabs, MODELS.keys()):
         with tab:
-            model = load_model(MODEL_PATHS[model_name])
+            model = load_model(MODELS[model_name])
             if model:
                 try:
                     prediction = model.predict(input_df)[0]
-                    st.metric(
-                        label="📊 Survie médiane estimée",
-                        value=f"{prediction:.1f} mois"
-                    )
+                    st.metric("📊 Survie médiane estimée", f"{prediction:.1f} mois")
                 except Exception as e:
                     st.error(f"❌ Erreur de prédiction : {e}")
 
@@ -160,9 +183,8 @@ PAGES = {
 }
 
 def main():
-    # Barre de navigation sous forme d'onglets alignés en haut
     tabs = st.tabs(list(PAGES.keys()))
-    
+
     for tab, (page_name, page_function) in zip(tabs, PAGES.items()):
         with tab:
             page_function()
