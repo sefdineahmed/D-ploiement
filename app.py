@@ -61,15 +61,10 @@ def encode_features(inputs):
 # Sections de l'application
 # ----------------------------------------------------------
 def accueil():
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        st.image("assets/header.jpg", width=200)
-    with col2:
-        st.title("🩺 OncoSuite - Plateforme d'Aide à la Décision")
-        st.markdown("""
-        **Estimation du temps de survie post-traitement du cancer gastrique**
-        """)
-    
+    st.title("🩺 OncoSuite - Plateforme d'Aide à la Décision")
+    st.markdown("""
+    **Estimation du temps de survie post-traitement du cancer gastrique**
+    """)
     st.markdown("---")
     st.write("""
     ### Fonctionnalités principales :
@@ -84,10 +79,9 @@ def analyse_descriptive():
     df = load_data()
     
     with st.expander("🔍 Aperçu des données brutes", expanded=True):
-        st.dataframe(df.head(10))  # Correction ici
+        st.dataframe(df.head(10))
         st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
     
-    st.markdown("---")
     col1, col2 = st.columns(2)
     
     with col1:
@@ -99,126 +93,39 @@ def analyse_descriptive():
     with col2:
         st.subheader("🌡 Matrice de corrélation")
         corr_matrix = df.corr()
-        fig = px.imshow(corr_matrix, 
-                       color_continuous_scale='RdBu_r',
-                       labels=dict(color="Corrélation"))
+        fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels=dict(color="Corrélation"))
         st.plotly_chart(fig, use_container_width=True)
 
 def modelisation():
     st.title("🤖 Prédiction de Survie")
     
-    # Formulaire d'entrée
     with st.expander("📋 Paramètres du patient", expanded=True):
         inputs = {}
-        cols = st.columns(3)
-        for i, (feature, config) in enumerate(FEATURE_CONFIG.items()):
-            with cols[i % 3]:
-                inputs[feature] = st.selectbox(
-                    label=config["label"],
-                    options=("Non", "Oui"),
-                    key=feature
-                )
+        for feature, config in FEATURE_CONFIG.items():
+            inputs[feature] = st.selectbox(label=config["label"], options=("Non", "Oui"), key=feature)
     
-    # Encodage des données
     input_df = encode_features({k: v == "Oui" for k, v in inputs.items()})
     
-    # Affichage des résultats
     st.markdown("---")
-    tabs = st.tabs(list(MODELS.keys()))
-    
-    for tab, model_name in zip(tabs, MODELS.keys()):
-        with tab:
-            model = load_model(MODELS[model_name])
-            if model:
-                try:
-                    prediction = model.predict(input_df)[0]
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.metric(
-                            label="Survie médiane estimée",
-                            value=f"{prediction:.1f} mois",
-                            help="Valeur prédite par le modèle"
-                        )
-                    with col2:
-                        months = min(int(prediction), 120)
-                        fig = px.line(
-                            x=list(range(months)),
-                            y=[100 - (i/months)*100 for i in range(months)],
-                            labels={"x": "Mois", "y": "Probabilité de survie (%)"},
-                            color_discrete_sequence=['#2ca02c']
-                        )
-                        st.plotly_chart(fig, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Erreur de prédiction : {str(e)}")
+    for model_name, model_path in MODELS.items():
+        model = load_model(model_path)
+        if model:
+            try:
+                prediction = model.predict(input_df)[0]
+                st.metric(label=f"{model_name} - Survie médiane estimée", value=f"{prediction:.1f} mois")
+            except Exception as e:
+                st.error(f"Erreur de prédiction : {str(e)}")
 
-def a_propos():
-    st.title("📚 À Propos")
-    cols = st.columns([1, 3])
-    with cols[0]:
-        st.image("assets/team.jpg")
-    with cols[1]:
-        st.markdown("""
-        ### Équipe Médicale
-        - **Dr. Alioune Diop** - Oncologue
-        - **Pr. Aminata Ndiaye** - Chirurgien Digestif
-        - **M. Jean Dupont** - Data Scientist
-        
-        **Version**: 2.1.0  
-        **Dernière mise à jour**: Juin 2024
-        """)
-
-def contact():
-    st.title("📩 Contact")
-    with st.container(border=True):
-        st.markdown("""
-        #### Coordonnées
-        **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
-        **Téléphone**: +221 33 839 50 00  
-        **Email**: contact@oncosuite.sn
-        """)
-        
-        with st.form("contact_form"):
-            name = st.text_input("Nom complet")
-            email = st.text_input("Email")
-            message = st.text_area("Message")
-            if st.form_submit_button("Envoyer", type="primary"):
-                st.success("Message envoyé avec succès !")
-
-# ----------------------------------------------------------
-# Navigation Principale
-# ----------------------------------------------------------
 def main():
     pages = {
         "Accueil": accueil,
         "Analyse": analyse_descriptive,
-        "Prédiction": modelisation,
-        "À Propos": a_propos,
-        "Contact": contact
+        "Prédiction": modelisation
     }
     
-    # Navigation horizontale
-    st.markdown("""
-    <style>
-        div[data-testid="stHorizontalBlock"] {
-            gap: 0.5rem;
-            padding: 1rem;
-            background: #f0f2f6;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    with st.container():
-        cols = st.columns(len(pages))
-        for i, (page_name, _) in enumerate(pages.items()):
-            with cols[i]:
-                if st.button(page_name, use_container_width=True):
-                    st.session_state.current_page = page_name
-    
-    # Affichage de la page sélectionnée
-    current_page = pages.get(st.session_state.get("current_page", "Accueil"))
-    current_page()
+    st.sidebar.title("Navigation")
+    selection = st.sidebar.radio("Aller à", list(pages.keys()))
+    pages[selection]()
 
 if __name__ == "__main__":
     main()
