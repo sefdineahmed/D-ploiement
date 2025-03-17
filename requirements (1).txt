@@ -1,0 +1,19 @@
+# Core
+streamlit
+pandas
+numpy
+openpyxl
+joblib
+
+# Machine Learning
+tensorflow
+scikit-learn
+lifelines
+scikit-survival
+
+# Visualisation
+plotly
+
+# Utilitaires
+pyyaml
+python-dateutil
