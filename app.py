@@ -84,7 +84,7 @@ def analyse_descriptive():
     df = load_data()
     
     with st.expander("🔍 Aperçu des données brutes", expanded=True):
-        st.dataframe(df.head(10), 
+        st.dataframe(df.head(10))  # Correction ici
         st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
     
     st.markdown("---")
@@ -143,7 +143,7 @@ def modelisation():
                         months = min(int(prediction), 120)
                         fig = px.line(
                             x=list(range(months)),
-                            y=[100 - (i/month)*100 for i in range(months)],
+                            y=[100 - (i/months)*100 for i in range(months)],
                             labels={"x": "Mois", "y": "Probabilité de survie (%)"},
                             color_discrete_sequence=['#2ca02c']
                         )
