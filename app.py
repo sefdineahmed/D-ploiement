@@ -6,35 +6,8 @@ import numpy as np
 import plotly.express as px
 from PIL import Image
 
-# Custom loss function for DeepSurv
-@tf.keras.utils.register_keras_serializable()
-def cox_loss(y_true, y_pred):
-    # [Conserver la même implémentation...]
-
-# Configuration
-MODELS = {
-    "Cox PH": "models/coxph.joblib",
-    "Random Survival Forest": "models/rsf.joblib",
-    "GBST": "models/gbst.joblib",
-    "DeepSurv": "models/deepsurv.keras"
-}
-
-FEATURES = { ... }  # Conserver la même configuration
-
-def load_models():
-    # [Conserver la même implémentation...]
-
-def user_input_sidebar():
-    # [Conserver la même implémentation...]
-
-def display_predictions(models, data):
-    # [Conserver la même implémentation...]
-
-def show_model_info():
-    # [Conserver la même implémentation...]
-
+# --- Configuration de base DOIT ÊTRE LA PREMIÈRE COMMANDE STREAMLIT ---
 def main():
-    # --- CONFIGURATION DE LA PAGE EN PREMIER ---
     st.set_page_config(
         page_title="OncoPredict - Cancer Gastrique",
         page_icon="🩺",
@@ -42,7 +15,8 @@ def main():
         initial_sidebar_state="expanded"
     )
     
-    # --- Custom CSS après set_page_config ---
+    # --- Le reste du code après set_page_config ---
+    # Custom CSS
     st.markdown("""
     <style>
         .main {background: #f9f9f9;}
@@ -52,7 +26,7 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # --- Suite du code original ---
+    # En-tête
     col1, col2 = st.columns([1, 3])
     with col1:
         img = Image.open("assets/medical-icon.png")
@@ -61,14 +35,19 @@ def main():
         st.title("OncoPredict - Aide à la Décision")
         st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
     
+    # Chargement des modèles
     models = load_models()
     if not models:
         st.stop()
     
+    # Formulaire
     input_data = user_input_sidebar()
+    
+    # Affichage principal
     display_predictions(models, input_data)
     show_model_info()
     
+    # Footer
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666;">
@@ -78,5 +57,22 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
+# --- Les autres fonctions doivent être DÉFINIES AVANT main() ---
+@tf.keras.utils.register_keras_serializable()
+def cox_loss(y_true, y_pred):
+    # ... (même implémentation que précédemment)
+
+def load_models():
+    # ... (même implémentation que précédemment)
+
+def user_input_sidebar():
+    # ... (même implémentation que précédemment)
+
+def display_predictions(models, data):
+    # ... (même implémentation que précédemment)
+
+def show_model_info():
+    # ... (même implémentation que précédemment)
+
 if __name__ == "__main__":
-    main()
+    main()  # L'appel principal DOIT ÊTRE LA DERNIÈRE LIGNE
