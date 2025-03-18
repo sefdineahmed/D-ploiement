@@ -109,21 +109,24 @@ def analyse_descriptive():
     
     st.markdown("---")
     col1, col2 = st.columns(2)
+    
     with col1:
         st.subheader("📈 Distribution des variables")
         selected_var = st.selectbox("Choisir une variable", df.columns)
         fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
         st.plotly_chart(fig, use_container_width=True)
+    
     with col2:
         st.subheader("🌡 Matrice de corrélation")
-        corr_matrix = df.corr()
+        # Sélection uniquement des colonnes numériques
+        numeric_df = df.select_dtypes(include=["number"])
+        corr_matrix = numeric_df.corr()
         fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
         st.plotly_chart(fig, use_container_width=True)
 
 def modelisation():
     st.title("🤖 Prédiction de Survie")
     
-    # Formulaire d'entrée pour les variables catégorielles
     with st.expander("📋 Paramètres du patient", expanded=True):
         inputs = {}
         cols = st.columns(3)
@@ -131,10 +134,9 @@ def modelisation():
             with cols[i % 3]:
                 inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
     
-    # Encodage des variables (Oui -> 1, Non -> 0)
     input_df = encode_features(inputs)
-    
     st.markdown("---")
+    
     # Affichage des résultats dans des onglets alignés en haut
     tabs = st.tabs(list(MODELS.keys()))
     for tab, model_name in zip(tabs, MODELS.keys()):
@@ -142,11 +144,11 @@ def modelisation():
             model = load_model(MODELS[model_name])
             if model:
                 try:
-                    # Prédiction : la fonction predict retourne un tableau, on récupère le premier élément
+                    # La prédiction retourne un tableau, on récupère le premier élément
                     prediction = model.predict(input_df)[0]
                     st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
                     
-                    # Optionnel : visualisation d'une courbe de survie
+                    # Visualisation optionnelle : courbe de survie
                     months = min(int(prediction), 120)
                     fig = px.line(
                         x=list(range(months)),
