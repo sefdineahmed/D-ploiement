@@ -45,6 +45,17 @@ FEATURE_CONFIG = {
 }
 
 # ----------------------------------------------------------
+# Définition de la fonction personnalisée pour DeepSurv
+# ----------------------------------------------------------
+@tf.keras.utils.register_keras_serializable()
+def cox_loss(y_true, y_pred):
+    """
+    Implémente la fonction de perte Cox.
+    Remplacez cette implémentation par celle utilisée lors de l'entraînement.
+    """
+    return tf.reduce_mean(tf.square(y_true - y_pred))
+
+# ----------------------------------------------------------
 # Fonctions Utilitaires
 # ----------------------------------------------------------
 @st.cache_data(show_spinner=False)
@@ -58,13 +69,13 @@ def load_data():
 
 @st.cache_resource(show_spinner=False)
 def load_model(model_path):
-    """Charge un modèle en gérant les erreurs."""
+    """Charge un modèle en gérant les erreurs et en passant les custom_objects si nécessaire."""
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
         return None
     try:
         if model_path.endswith(".keras"):
-            return tf.keras.models.load_model(model_path)
+            return tf.keras.models.load_model(model_path, custom_objects={'cox_loss': cox_loss})
         return joblib.load(model_path)
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du modèle : {e}")
@@ -118,7 +129,6 @@ def analyse_descriptive():
     
     with col2:
         st.subheader("🌡 Matrice de corrélation")
-        # Sélection uniquement des colonnes numériques
         numeric_df = df.select_dtypes(include=["number"])
         corr_matrix = numeric_df.corr()
         fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
@@ -137,18 +147,15 @@ def modelisation():
     input_df = encode_features(inputs)
     st.markdown("---")
     
-    # Affichage des résultats dans des onglets alignés en haut
     tabs = st.tabs(list(MODELS.keys()))
     for tab, model_name in zip(tabs, MODELS.keys()):
         with tab:
             model = load_model(MODELS[model_name])
             if model:
                 try:
-                    # La prédiction retourne un tableau, on récupère le premier élément
                     prediction = model.predict(input_df)[0]
                     st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
                     
-                    # Visualisation optionnelle : courbe de survie
                     months = min(int(prediction), 120)
                     fig = px.line(
                         x=list(range(months)),
@@ -204,7 +211,6 @@ PAGES = {
 }
 
 def main():
-    # Utilisation de st.tabs pour aligner les onglets en haut
     tabs = st.tabs(list(PAGES.keys()))
     for tab, (page_name, page_func) in zip(tabs, PAGES.items()):
         with tab:
