@@ -37,7 +37,7 @@ FEATURE_CONFIG = {
     "Ulceregastrique": "Ulcère gastrique",
     "Douleurepigastrique": "Douleur épigastrique",
     "Ulcero-bourgeonnant": "Lésion ulcéro-bourgeonnante",
-    "Denutrution": "Dénutrition",
+    "Denitrution": "Dénutrition",
     "Tabac": "Tabagisme actif",
     "Mucineux": "Type mucineux",
     "Infiltrant": "Type infiltrant",
@@ -107,7 +107,7 @@ def analyse_descriptive():
         return
 
     with st.expander("🔍 Aperçu des données brutes", expanded=True):
-        st.dataframe(df.head(10))
+        st.dataframe(df.head(5))
         st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
     
     st.markdown("---")
