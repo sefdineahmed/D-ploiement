@@ -5,24 +5,27 @@ import joblib
 import tensorflow as tf
 import plotly.express as px
 from PIL import Image
+import numpy as np
 
 # ----------------------------------------------------------
 # Patch pour les incompatibilités de versions
 # ----------------------------------------------------------
-# Patch pour trapz (SciPy)
-import scipy.integrate as integrate
+# Pour trapz
 try:
     from scipy.integrate import trapz
 except ImportError:
-    from numpy import trapz as np_trapz
-    integrate.trapz = np_trapz
+    trapz = np.trapz  # utiliser numpy.trapz en repli
 
-# Patch pour validate_data (scikit-learn)
+import scipy.integrate as integrate
+integrate.trapz = trapz
+
+# Pour validate_data
 try:
     from sklearn.utils.validation import validate_data
 except ImportError:
-    def validate_data(*args, **kwargs):
-        return
+    # Fonction de repli : retourne simplement le premier argument
+    def validate_data(X, *args, **kwargs):
+        return X
 
 # ----------------------------------------------------------
 # Configuration de l'application
@@ -112,7 +115,6 @@ def encode_features(inputs):
     """
     encoded = {}
     for key, value in inputs.items():
-        # Si la valeur est numérique, on la conserve
         if isinstance(value, (int, float)):
             encoded[key] = [value]
         else:
@@ -168,23 +170,19 @@ def analyse_descriptive():
 def modelisation():
     st.title("🤖 Prédiction de Survie")
     
-    # Création du formulaire d'entrée
     with st.expander("📋 Paramètres du patient", expanded=True):
         inputs = {}
         cols = st.columns(3)
         for i, (feature, label) in enumerate(FEATURE_CONFIG.items()):
             with cols[i % 3]:
-                # Pour la variable "Âge", on utilise un input numérique
                 if feature == "Age":
                     inputs[feature] = st.number_input(label, min_value=0, max_value=120, value=50, step=1, key=feature)
                 else:
                     inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
     
-    # Encodage des variables
     input_df = encode_features(inputs)
     st.markdown("---")
     
-    # Affichage des résultats dans des onglets alignés en haut
     tabs = st.tabs(list(MODELS.keys()))
     for tab, model_name in zip(tabs, MODELS.keys()):
         with tab:
@@ -192,6 +190,8 @@ def modelisation():
             if model:
                 try:
                     prediction = model.predict(input_df)[0]
+                    # Convertir la prédiction en float au cas où c'est un tableau NumPy
+                    prediction = float(prediction.item() if hasattr(prediction, "item") else prediction)
                     st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
                     
                     months = min(int(prediction), 120)
