@@ -9,6 +9,18 @@ from lifelines import CoxPHFitter
 from tensorflow.keras.models import load_model as tf_load_model
 
 # ----------------------------------------------------------
+# Contournement pour l'import de validate_data dans scikit-learn
+# Certains modèles (ex. RSF) attendent cette fonction qui n'est plus présente
+try:
+    from sklearn.utils.validation import validate_data
+except ImportError:
+    def validate_data(*args, **kwargs):
+        # Fonction "dummy" pour satisfaire l'import dans le RSF
+        return
+    import sklearn.utils.validation as sv
+    sv.validate_data = validate_data
+
+# ----------------------------------------------------------
 # Configuration de l'application
 # ----------------------------------------------------------
 st.set_page_config(
@@ -157,7 +169,6 @@ def modelisation():
                 if model_name == "Cox PH":
                     # Si c'est un modèle CoxPHFitter
                     if hasattr(model, "params_"):
-                        # S'assurer que model.params_.index est itérable
                         cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
                     else:
                         cols_to_use = input_df.columns
@@ -165,7 +176,6 @@ def modelisation():
                     prediction = model.predict_median(input_df)
                     # Gérer le cas où prediction est un scalaire ou une Series
                     if hasattr(prediction, '__iter__'):
-                        # Si c'est une Series, récupérer le premier élément
                         pred_val = prediction.iloc[0] if isinstance(prediction, pd.Series) else prediction[0]
                     else:
                         pred_val = prediction
@@ -176,7 +186,7 @@ def modelisation():
                     st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
                 
                 # Visualisation optionnelle : courbe de survie
-                months = min(int(prediction) if hasattr(prediction, '__iter__') is False else int(prediction[0]), 120)
+                months = min(int(prediction) if not hasattr(prediction, '__iter__') else int(prediction[0]), 120)
                 fig = px.line(
                     x=list(range(months)),
                     y=[100 - (i / months) * 100 for i in range(months)],
