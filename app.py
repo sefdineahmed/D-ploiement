@@ -9,18 +9,6 @@ from lifelines import CoxPHFitter
 from tensorflow.keras.models import load_model as tf_load_model
 
 # ----------------------------------------------------------
-# Contournement pour l'import de validate_data dans scikit-learn
-# Certains modèles (ex. RSF) attendent cette fonction qui n'est plus présente
-try:
-    from sklearn.utils.validation import validate_data
-except ImportError:
-    def validate_data(*args, **kwargs):
-        # Fonction "dummy" pour satisfaire l'import dans le RSF
-        return
-    import sklearn.utils.validation as sv
-    sv.validate_data = validate_data
-
-# ----------------------------------------------------------
 # Configuration de l'application
 # ----------------------------------------------------------
 st.set_page_config(
@@ -78,6 +66,17 @@ def load_model(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
         return None
     try:
+        # Correction spécifique pour le modèle RSF
+        if model_path.endswith("rsf.joblib"):
+            import sklearn.utils.validation as sk_validation
+            if not hasattr(sk_validation, "validate_data"):
+                # Création d'un stub pour validate_data
+                def validate_data(X, y=None, *, reset=True, validate_separately=False, **kwargs):
+                    if y is None:
+                        return X
+                    return X, y
+                sk_validation.validate_data = validate_data
+
         if model_path.endswith(".keras"):
             return tf_load_model(model_path)  # Chargement des modèles Keras
         return joblib.load(model_path)  # Chargement des autres modèles
@@ -181,7 +180,7 @@ def modelisation():
                         pred_val = prediction
                     st.metric(label="Survie médiane estimée", value=f"{pred_val:.1f} mois")
                 else:
-                    # Pour les autres modèles
+                    # Pour les autres modèles (RSF, DeepSurv, GBST)
                     prediction = model.predict(input_df)[0]
                     st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
                 
