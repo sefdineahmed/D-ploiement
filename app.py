@@ -44,6 +44,7 @@ MODELS = {
 }
 
 # Configuration des variables
+# Pour AGE, on souhaite conserver la valeur numérique, pour les autres, conversion Oui/Non
 FEATURE_CONFIG = {
     "AGE": "Âge",
     "Cardiopathie": "Cardiopathie",
@@ -85,6 +86,7 @@ def load_model(model_path):
     try:
         _, ext = os.path.splitext(model_path)
         if ext in ['.keras', '.h5']:
+            # Fonction de perte custom pour DeepSurv (si nécessaire)
             def cox_loss(y_true, y_pred):
                 event = tf.cast(y_true[:, 0], dtype=tf.float32)
                 risk = y_pred[:, 0]
@@ -226,18 +228,9 @@ def modelisation():
                     input_df = input_df[cols_to_use]
                 pred = predict_survival(model, input_df, model_name)
                 cleaned_pred = clean_prediction(pred, model_name)
-                
-                # Calcul de l'intervalle de confiance (pour les modèles qui le supportent)
-                if model_name == "Cox PH" and isinstance(model, CoxPHFitter):
-                    ci = model.predict_confidence_intervals(input_df)
-                    lower_ci, upper_ci = ci.iloc[0]
-                    st.metric(
-                        label="Survie médiane estimée",
-                        value=f"{cleaned_pred:.1f} mois",
-                        delta=f"Intervalle de confiance à 95% : [{lower_ci:.1f}, {upper_ci:.1f}] mois"
-                    )
-                else:
-                    st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
+                if np.isnan(cleaned_pred):
+                    raise ValueError("La prédiction renvoyée est NaN.")
+                st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
                 
                 months = min(int(cleaned_pred), 120)
                 fig = px.line(
@@ -275,7 +268,9 @@ def contact():
         """
     #### Coordonnées
     **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
+    
     **Téléphone**: +221 77 808 09 42
+    
     **Email**: ahmed.sefdine@uadb.edu.sn
     """
     )
