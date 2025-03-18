@@ -9,20 +9,16 @@ from PIL import Image
 from lifelines import CoxPHFitter
 from tensorflow.keras.models import load_model as tf_load_model
 
-# ----------------------------------------------------------
-# Wrapper pour le modèle RSF afin d'ajouter l'attribut sklearn_tags
-# ----------------------------------------------------------
-class RSFWrapper:
-    def __init__(self, model):
-        self.model = model
-
-    def __getattr__(self, name):
-        return getattr(self.model, name)
-
-    @property
-    def sklearn_tags(self):
-        # Retourne un dictionnaire vide pour éviter l'erreur
-        return {}
+# --- Patch scikit-learn pour éviter l'erreur 'sklearn_tags' ---
+try:
+    from sklearn.base import BaseEstimator
+    if not hasattr(BaseEstimator, "sklearn_tags"):
+        @property
+        def sklearn_tags(self):
+            return {}
+        BaseEstimator.sklearn_tags = sklearn_tags
+except Exception as e:
+    pass
 
 # ----------------------------------------------------------
 # Configuration de l'application
@@ -82,7 +78,6 @@ def load_model(model_path):
     Charge un modèle pré-entraîné.
     Pour les modèles Keras (.keras ou .h5) on utilise tf.keras.models.load_model.
     Pour les autres, joblib.load.
-    Pour le modèle RSF, on enveloppe le modèle dans RSFWrapper pour fournir l'attribut sklearn_tags.
     """
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
@@ -91,7 +86,7 @@ def load_model(model_path):
     try:
         _, ext = os.path.splitext(model_path)
         if ext in ['.keras', '.h5']:
-            # Définition d'une fonction de perte custom si besoin (pour DeepSurv par exemple)
+            # Fonction de perte custom pour DeepSurv (si nécessaire)
             def cox_loss(y_true, y_pred):
                 event = tf.cast(y_true[:, 0], dtype=tf.float32)
                 risk = y_pred[:, 0]
@@ -100,11 +95,7 @@ def load_model(model_path):
                 return loss
             return tf_load_model(model_path, custom_objects={"cox_loss": cox_loss})
         else:
-            model = joblib.load(model_path)
-            # Si le modèle est RSF, on l'enveloppe dans RSFWrapper
-            if "rsf" in model_path.lower():
-                model = RSFWrapper(model)
-            return model
+            return joblib.load(model_path)
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du modèle : {e}")
         return None
@@ -112,13 +103,13 @@ def load_model(model_path):
 def encode_features(inputs):
     """
     Encode les variables.
-    Pour la variable 'AGE', on conserve la valeur numérique.
-    Pour les autres variables, "OUI" est converti en 1 et toute autre valeur en 0.
+    Pour 'AGE', on conserve la valeur numérique.
+    Pour les autres, "OUI" devient 1 et toute autre valeur 0.
     """
     encoded = {}
     for k, v in inputs.items():
         if k == "AGE":
-            encoded[k] = v  # Conserver la valeur numérique
+            encoded[k] = v
         else:
             encoded[k] = 1 if v.upper() == "OUI" else 0
     return pd.DataFrame([encoded])
@@ -126,8 +117,6 @@ def encode_features(inputs):
 def predict_survival(model, data, model_name):
     """
     Effectue la prédiction du temps de survie selon le type de modèle.
-    Pour CoxPHFitter, on utilise predict_median.
-    Pour les autres modèles, on suppose que model.predict retourne un tableau numpy.
     """
     if hasattr(model, "predict_median"):
         pred = model.predict_median(data)
@@ -146,7 +135,7 @@ def predict_survival(model, data, model_name):
 
 def clean_prediction(prediction, model_name):
     """
-    Nettoie la prédiction pour éviter les valeurs négatives et renvoie la valeur ajustée.
+    Nettoie la prédiction pour éviter les valeurs négatives.
     """
     try:
         pred_val = float(prediction)
@@ -215,17 +204,14 @@ def modelisation():
         cols = st.columns(3)
         for i, (feature, label) in enumerate(FEATURE_CONFIG.items()):
             with cols[i % 3]:
-                # Pour AGE, on utilise un number_input, sinon un selectbox
                 if feature == "AGE":
                     inputs[feature] = st.number_input(label, min_value=18, max_value=120, value=50, key=feature)
                 else:
                     inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
     
-    # Encodage des variables avec gestion particulière pour AGE
     input_df = encode_features(inputs)
     st.markdown("---")
     
-    # Vérifier que toutes les colonnes sont présentes
     missing_columns = [col for col in FEATURE_CONFIG.keys() if col not in input_df.columns]
     if missing_columns:
         st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
@@ -237,7 +223,6 @@ def modelisation():
     if st.button("Prédire le temps de survie"):
         if model:
             try:
-                # Pour le modèle Cox PH, réordonner les colonnes si nécessaire
                 if model_name == "Cox PH" and hasattr(model, "params_"):
                     cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
                     input_df = input_df[cols_to_use]
@@ -247,7 +232,6 @@ def modelisation():
                     raise ValueError("La prédiction renvoyée est NaN.")
                 st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
                 
-                # Visualisation optionnelle : courbe de survie
                 months = min(int(cleaned_pred), 120)
                 fig = px.line(
                     x=list(range(months)),
