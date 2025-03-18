@@ -171,7 +171,7 @@ def a_propos():
         ### Équipe 
         - **Pr. Aba Diop** - Maître de Conférences (UAD Bambey) 
         - **PhD. Idrissa Sy** - PhD (UAD Bambey)  
-        - **M. Ahmed Sefdine D** - Data Scientist
+        - **M. Ahmed Sefdine** - Data Scientist
         
         **Version**: 2.1.0  
         **Dernière mise à jour**: Juin 2024
