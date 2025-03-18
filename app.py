@@ -1,158 +1,99 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import plotly.express as px
-from lifelines import KaplanMeierFitter
 import joblib
-import tensorflow as tf
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from lifelines import KaplanMeierFitter, CoxPHFitter
 
-# Configuration initiale - DOIT ÊTRE LA PREMIÈRE COMMANDE STREAMLIT
-st.set_page_config(
-    page_title="OncoDecision - Cancer Gastrique",
-    page_icon="🩺",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Charger les modèles
+cox_model = joblib.load("models/coxph.joblib")
+rsf_model = joblib.load("models/rsf.joblib")
+gbst_model = joblib.load("models/gbst.joblib")
 
-# Configuration des chemins
+# Charger les données
 DATA_PATH = "data/GastricCancerData.xlsx"
-MODEL_PATHS = {
-    "Cox PH": "models/coxph.joblib",
-    "RSF": "models/rsf.joblib",
-    "GBST": "models/gbst.joblib",
-    "DeepSurv": "models/deepsurv.keras"
-}
+df = pd.read_excel(DATA_PATH)
 
-# Configuration des caractéristiques
-FEATURE_CONFIG = {
-    'AGE': {'label': 'Âge', 'type': 'number', 'min': 18, 'max': 100, 'default': 50},
-    'SEXE': {'label': 'Sexe', 'type': 'select', 'options': ['Femme', 'Homme']},
-    'Cardiopathie': {'label': 'Cardiopathie', 'type': 'bool'},
-    # Ajouter toutes les autres variables selon le même format
-}
+# Définition des variables clés
+features = ['AGE', 'Cardiopathie', 'Ulceresgastrique', 'Douleurepigastrique',
+            'Ulcero-bourgeonnant', 'Denitrution', 'Tabac', 'Mucineux',
+            'Infiltrant', 'Stenosant', 'Metastases', 'Adenopathie']
+target = ['Tempsdesuivi (Mois)', 'Deces']
 
-# Définition de la fonction de perte custom pour DeepSurv
-@tf.keras.utils.register_keras_serializable()
-def cox_loss(y_true, y_pred):
-    event = y_true[:, 0]
-    time = y_true[:, 1]
-    sorted_idx = tf.argsort(time, direction='DESCENDING')
-    event = tf.gather(event, sorted_idx)
-    pred = tf.gather(y_pred, sorted_idx)
-    hazard_ratio = tf.exp(pred)
-    log_risk = tf.math.log(tf.cumsum(hazard_ratio) + 1e-15)
-    uncensored_likelihood = (pred - log_risk) * event
-    return -tf.reduce_mean(uncensored_likelihood)
+# Barre de navigation
+st.sidebar.title("Navigation")
+menu = st.sidebar.radio("Aller à", ["Accueil", "Formulaire Patient", "Analyse Descriptive", "Analyse de Survie", "Prédiction", "Aide & Contact"])
 
-# Fonctions de chargement
-@st.cache_data
-def load_data():
-    return pd.read_excel(DATA_PATH)
-
-@st.cache_resource
-def load_model(model_name):
-    if MODEL_PATHS[model_name].endswith('.keras'):
-        return tf.keras.models.load_model(MODEL_PATHS[model_name], custom_objects={'cox_loss': cox_loss})
-    return joblib.load(MODEL_PATHS[model_name])
-
-# Sections de l'application
-def accueil():
-    st.title("Bienvenue dans OncoDecision")
+# 📌 **Accueil**
+if menu == "Accueil":
+    st.title("🩺 Application de Prédiction du Temps de Survie")
     st.image("assets/header.jpg", use_column_width=True)
-    st.markdown("""
-    **Outil d'aide à la décision pour le cancer gastrique**
-    - 📊 Analyse des données patients
-    - 📈 Modèles prédictifs de survie
-    - 🎯 Recommandations personnalisées
-    """)
+    st.write("Bienvenue sur l'application d'aide à la décision pour l'estimation du temps de survie des patients atteints du cancer de l'estomac.")
 
-def analyse_descriptive():
-    st.title("Analyse Exploratoire")
-    df = load_data()
+# 📌 **Formulaire Patient**
+elif menu == "Formulaire Patient":
+    st.title("📋 Formulaire Patient")
     
-    with st.expander("Données Brutes"):
-        st.dataframe(df.head())
+    patient_data = {}
+    for feature in features:
+        patient_data[feature] = st.number_input(f"{feature}", value=0)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        selected_var = st.selectbox("Choisir une variable", df.columns)
-        fig = px.histogram(df, x=selected_var)
-        st.plotly_chart(fig)
+    if st.button("Enregistrer"):
+        new_data = pd.DataFrame([patient_data])
+        df = pd.concat([df, new_data], ignore_index=True)
+        df.to_excel(DATA_PATH, index=False)
+        st.success("Les données du patient ont été enregistrées avec succès !")
+
+# 📌 **Analyse Descriptive**
+elif menu == "Analyse Descriptive":
+    st.title("📊 Analyse Descriptive")
+
+    # Statistiques générales
+    st.write("### Statistiques générales")
+    st.write(df.describe())
+
+    # Matrice de corrélation
+    st.write("### Matrice de corrélation")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.heatmap(df.corr(), annot=True, cmap="coolwarm", fmt=".2f")
+    st.pyplot(fig)
+
+# 📌 **Analyse de Survie**
+elif menu == "Analyse de Survie":
+    st.title("📈 Analyse de Survie")
+
+    kmf = KaplanMeierFitter()
+    kmf.fit(df["Tempsdesuivi (Mois)"], event_observed=df["Deces"])
     
-    with col2:
-        if 'Deces' in df.columns:
-            kmf = KaplanMeierFitter()
-            kmf.fit(df['Tempsdesuivi (Mois)'], df['Deces'])
-            fig = px.line(kmf.survival_function_, title='Courbe de Survie Kaplan-Meier')
-            st.plotly_chart(fig)
+    st.write("### Courbe de Kaplan-Meier")
+    fig, ax = plt.subplots()
+    kmf.plot_survival_function(ax=ax)
+    st.pyplot(fig)
 
-def prediction():
-    st.title("Prédiction de Survie")
+    st.write("### Modèle de Cox")
+    cph = CoxPHFitter()
+    cph.fit(df[features + target], duration_col="Tempsdesuivi (Mois)", event_col="Deces")
+    st.write(cph.summary)
+
+# 📌 **Prédiction**
+elif menu == "Prédiction":
+    st.title("🤖 Prédiction du Temps de Survie")
+
+    input_data = np.array([[st.number_input(f"{feature}", value=0) for feature in features]])
     
-    with st.sidebar:
-        st.header("Informations Patient")
-        inputs = {}
-        for feature, config in FEATURE_CONFIG.items():
-            if config['type'] == 'number':
-                inputs[feature] = st.number_input(config['label'], 
-                                                 min_value=config['min'],
-                                                 max_value=config['max'],
-                                                 value=config['default'])
-            elif config['type'] == 'bool':
-                inputs[feature] = st.selectbox(config['label'], ['Non', 'Oui']) == 'Oui'
-                
-    # Encodage des entrées
-    input_df = pd.DataFrame([inputs])
-    
-    # Affichage des prédictions
-    tabs = st.tabs(list(MODEL_PATHS.keys()))
-    for tab, model_name in zip(tabs, MODEL_PATHS.keys()):
-        with tab:
-            try:
-                model = load_model(model_name)
-                pred = model.predict(input_df)[0]
-                st.metric("Survie Médiane Estimée", f"{pred:.1f} mois")
-                
-                # Visualisation temporelle
-                time_points = np.linspace(0, pred, 100)
-                fig = px.line(x=time_points, y=1 - (time_points/pred), 
-                             labels={'x': 'Mois', 'y': 'Probabilité de Survie'})
-                st.plotly_chart(fig)
-                
-            except Exception as e:
-                st.error(f"Erreur avec {model_name}: {str(e)}")
+    if st.button("Prédire"):
+        pred_cox = cox_model.predict_median(input_data)
+        pred_rsf = rsf_model.predict(input_data)
+        pred_gbst = gbst_model.predict(input_data)
 
-def a_propos():
-    st.title("À Propos")
-    st.markdown("""
-    **Version:** 2.0  
-    **Développé par:** Équipe d'Oncologie CHU Dakar  
-    **Contact:** contact@oncodecision.sn
-    """)
-    st.image("assets/team.jpg", width=600)
+        st.write(f"⏳ **Prédiction Cox** : {pred_cox} mois")
+        st.write(f"🌲 **Prédiction Random Survival Forest** : {pred_rsf} mois")
+        st.write(f"📊 **Prédiction GBST** : {pred_gbst} mois")
 
-def contact():
-    st.title("Contact")
-    with st.form("form_contact"):
-        nom = st.text_input("Nom complet")
-        email = st.text_input("Email")
-        message = st.text_area("Message")
-        if st.form_submit_button("Envoyer"):
-            st.success("Message envoyé avec succès!")
-
-# Navigation Principale
-PAGES = {
-    "Accueil": accueil,
-    "Analyse": analyse_descriptive,
-    "Prédiction": prediction,
-    "À Propos": a_propos,
-    "Contact": contact
-}
-
-def main():
-    st.sidebar.title("Navigation")
-    selection = st.sidebar.radio("", list(PAGES.keys()))
-    PAGES[selection]()
-
-if __name__ == "__main__":
-    main()
+# 📌 **Aide & Contact**
+elif menu == "Aide & Contact":
+    st.title("📞 Aide & Contact")
+    st.write("📧 Email : contact@medapp.com")
+    st.write("📞 Téléphone : +221 77 123 45 67")
+    st.write("🌍 Site web : [medapp.com](https://medapp.com)")
