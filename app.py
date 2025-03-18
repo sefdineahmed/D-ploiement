@@ -78,7 +78,7 @@ def encode_features(inputs):
     Encode les variables catégorielles en format numérique (0/1).
     Chaque entrée "Oui" devient 1, "Non" devient 0.
     """
-    return pd.DataFrame({k: [1 if v == "OUI" else 0] for k, v in inputs.items()})
+    return pd.DataFrame({k: [1 if v.upper() == "OUI" else 0] for k, v in inputs.items()})
 
 # ----------------------------------------------------------
 # Définition des Pages
@@ -156,18 +156,27 @@ def modelisation():
             try:
                 if model_name == "Cox PH":
                     # Si c'est un modèle CoxPHFitter
-                    if isinstance(model, CoxPHFitter):
-                        # Réorganiser les colonnes en fonction du modèle
-                        input_df = input_df[model.params_.index]  
-                        prediction = model.predict_median(input_df)
-                        st.metric(label="Survie médiane estimée", value=f"{prediction[0]:.1f} mois")
+                    if hasattr(model, "params_"):
+                        # S'assurer que model.params_.index est itérable
+                        cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
+                    else:
+                        cols_to_use = input_df.columns
+                    input_df = input_df[cols_to_use]  
+                    prediction = model.predict_median(input_df)
+                    # Gérer le cas où prediction est un scalaire ou une Series
+                    if hasattr(prediction, '__iter__'):
+                        # Si c'est une Series, récupérer le premier élément
+                        pred_val = prediction.iloc[0] if isinstance(prediction, pd.Series) else prediction[0]
+                    else:
+                        pred_val = prediction
+                    st.metric(label="Survie médiane estimée", value=f"{pred_val:.1f} mois")
                 else:
                     # Pour les autres modèles
                     prediction = model.predict(input_df)[0]
                     st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
                 
                 # Visualisation optionnelle : courbe de survie
-                months = min(int(prediction), 120)
+                months = min(int(prediction) if hasattr(prediction, '__iter__') is False else int(prediction[0]), 120)
                 fig = px.line(
                     x=list(range(months)),
                     y=[100 - (i / months) * 100 for i in range(months)],
