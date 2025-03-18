@@ -267,11 +267,9 @@ def contact():
     st.markdown(
         """
     #### Coordonnées
-    **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
-    
-    **Téléphone**: +221 77 808 09 42
-    
-    **Email**: ahmed.sefdine@uadb.edu.sn
+    🌍: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
+    📞: +221 77 808 09 42
+    📩: ahmed.sefdine@uadb.edu.sn
     """
     )
     with st.form("contact_form"):
