@@ -32,7 +32,7 @@ MODELS = {
 
 # Configuration des variables (catégorielles -> Oui/Non)
 FEATURE_CONFIG = {
-    "Denitrition":"Dénutrition",
+    "Denitrution":"Dénutrition",
     "AGE":"Age",
     "Cardiopathie": "Cardiopathie",
     "Ulceregastrique": "Ulcère gastrique",
