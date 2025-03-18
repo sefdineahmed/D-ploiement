@@ -118,7 +118,7 @@ def encode_features(inputs):
         if isinstance(value, (int, float)):
             encoded[key] = [value]
         else:
-            encoded[key] = [1 if value == "Oui" else 0]
+            encoded[key] = [1 if value == "OUI" else 0]
     return pd.DataFrame(encoded)
 
 # ----------------------------------------------------------
@@ -179,7 +179,7 @@ def analyse_descriptive():
         if "temps" in df.columns and "event" in df.columns:
             st.subheader("📉 Courbe de survie Kaplan-Meier")
             kmf = KaplanMeierFitter()
-            kmf.fit(durations=df["temps"], event_observed=df["event"])
+            kmf.fit(durations=df["Tempsdesuivi (Mois)"], event_observed=df["Deces"])
             km_data = kmf.survival_function_.reset_index()
             fig_km = px.line(km_data, x="index", y=km_data.columns[1],
                              labels={"index": "Temps", km_data.columns[1]: "Survie"},
