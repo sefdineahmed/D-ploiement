@@ -3,8 +3,10 @@ import streamlit as st
 import pandas as pd
 import joblib
 import tensorflow as tf
+import plotly.express as px
+from PIL import Image
 from lifelines import CoxPHFitter
-from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.models import load_model as tf_load_model
 
 # ----------------------------------------------------------
 # Configuration de l'application
@@ -21,12 +23,28 @@ DATA_PATH = "data/GastricCancerData.xlsx"
 LOGO_PATH = "assets/header.jpg"
 TEAM_IMG_PATH = "assets/team.jpg"
 
-# Modèles
+# Configuration des modèles
 MODELS = {
     "Cox PH": "models/coxph.joblib",
     "RSF": "models/rsf.joblib",
     "DeepSurv": "models/deepsurv.keras",
     "GBST": "models/gbst.joblib"
+}
+
+# Configuration des variables (catégorielles -> Oui/Non)
+FEATURE_CONFIG = {
+    "Cardiopathie": "Cardiopathie",
+    "Ulceregastrique": "Ulcère gastrique",
+    "Douleurepigastrique": "Douleur épigastrique",
+    "Ulcero-bourgeonnant": "Lésion ulcéro-bourgeonnante",
+    "Denutrution": "Dénutrition",
+    "Tabac": "Tabagisme actif",
+    "Mucineux": "Type mucineux",
+    "Infiltrant": "Type infiltrant",
+    "Stenosant": "Type sténosant",
+    "Metastases": "Métastases",
+    "Adenopathie": "Adénopathie",
+    "AGE": "Âge",
 }
 
 # ----------------------------------------------------------
@@ -49,8 +67,8 @@ def load_model(model_path):
         return None
     try:
         if model_path.endswith(".keras"):
-            return tf.keras.models.load_model(model_path)
-        return joblib.load(model_path)
+            return tf_load_model(model_path)  # Chargement des modèles Keras
+        return joblib.load(model_path)  # Chargement des autres modèles
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du modèle : {e}")
         return None
@@ -82,6 +100,33 @@ def accueil():
     - 📤 Export des résultats cliniques
     """)
 
+def analyse_descriptive():
+    st.title("📊 Analyse Exploratoire")
+    df = load_data()
+    if df.empty:
+        return
+
+    with st.expander("🔍 Aperçu des données brutes", expanded=True):
+        st.dataframe(df.head(10))
+        st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
+    
+    st.markdown("---")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("📈 Distribution des variables")
+        selected_var = st.selectbox("Choisir une variable", df.columns)
+        fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        st.subheader("🌡 Matrice de corrélation")
+        # Sélection uniquement des colonnes numériques
+        numeric_df = df.select_dtypes(include=["number"])
+        corr_matrix = numeric_df.corr()
+        fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
+        st.plotly_chart(fig, use_container_width=True)
+
 def modelisation():
     st.title("🤖 Prédiction de Survie")
     
@@ -95,24 +140,27 @@ def modelisation():
     input_df = encode_features(inputs)
     st.markdown("---")
     
-    # Vérification de la sélection du modèle
-    model_choice = st.selectbox("Choisissez un modèle", list(MODELS.keys()))
+    # Vérifier si toutes les colonnes nécessaires sont présentes
+    missing_columns = [col for col in FEATURE_CONFIG.keys() if col not in input_df.columns]
+    if missing_columns:
+        st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
+        return
     
+    # Menu déroulant pour choisir le modèle
+    model_name = st.selectbox("Choisir un modèle", list(MODELS.keys()))
+    model = load_model(MODELS[model_name])
+    
+    # Bouton pour prédire le temps de survie
     if st.button("Prédire le temps de survie"):
-        # Vérifier que les données sont correctement encodées et complètes
-        if input_df.empty:
-            st.error("❌ Veuillez remplir tous les champs pour la prédiction.")
-            return
-
-        model = load_model(MODELS[model_choice])
         if model:
             try:
-                if model_choice == "Cox PH":
+                if model_name == "Cox PH":
                     # Si c'est un modèle CoxPHFitter
                     if isinstance(model, CoxPHFitter):
-                        input_df = input_df[model.params_.index]  # Réorganise les colonnes en fonction du modèle
+                        # Réorganiser les colonnes en fonction du modèle
+                        input_df = input_df[model.params_.index]  
                         prediction = model.predict_median(input_df)
-                        st.metric(label="Survie médiane estimée", value=f"{prediction.values[0]:.1f} mois")
+                        st.metric(label="Survie médiane estimée", value=f"{prediction[0]:.1f} mois")
                 else:
                     # Pour les autres modèles
                     prediction = model.predict(input_df)[0]
@@ -128,7 +176,7 @@ def modelisation():
                 )
                 st.plotly_chart(fig, use_container_width=True)
             except Exception as e:
-                st.error(f"❌ Erreur de prédiction pour {model_choice} : {e}")
+                st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
 def a_propos():
     """ Affichage de la section À Propos """
@@ -171,6 +219,7 @@ def contact():
 # ----------------------------------------------------------
 PAGES = {
     "🏠 Accueil": accueil,
+    "📊 Analyse": analyse_descriptive,
     "🤖 Prédiction": modelisation,
     "📚 À Propos": a_propos,
     "📩 Contact": contact
