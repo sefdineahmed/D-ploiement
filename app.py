@@ -160,22 +160,53 @@ def modelisation():
                 except Exception as e:
                     st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
+import os
+
+TEAM_IMG_PATH = "assets/team.jpg"
+
 def a_propos():
+    """ Affichage de la section À Propos """
     st.title("📚 À Propos")
+
     cols = st.columns([1, 3])
     with cols[0]:
         if os.path.exists(TEAM_IMG_PATH):
-            st.image(TEAM_IMG_PATH)
+            st.image(TEAM_IMG_PATH, width=150)
+    
     with cols[1]:
         st.markdown("""
-        ### Équipe 
-        - **Pr. Aba Diop** - Maître de Conférences (UAD Bambey) 
-        - **PhD. Idrissa Sy** - PhD (UAD Bambey)  
-        - **M. Ahmed Sefdine** - Data Scientist
-        
-        **Version**: 2.1.0  
-        **Dernière mise à jour**: Juin 2024
+        ### Équipe  
+        - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences (UAD Bambey)  
+        - **🎓 PhD. Idrissa Sy** - PhD en Statistiques (UAD Bambey)  
+        - **💻 M. Ahmed Sefdine** - Data Scientist  
+
+        Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
+        Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
+
+        **Version** : `2.1.0`  
+        **Dernière mise à jour** : `Mars 2025`
         """)
+
+# Ajouter un pied de page avec les liens sociaux
+def footer():
+    """ Affichage du pied de page avec les liens sociaux """
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align: center;'>
+        <p>Développé par <b>Ahmed Sefdine</b> | 📅 Mars 2025</p>
+        <p>Suivez-nous sur :</p>
+        <a href='https://github.com/ahmedsefdine' target='_blank'><img src='https://img.shields.io/badge/GitHub-%2312100E.svg?style=for-the-badge&logo=github&logoColor=white' height='30'></a>
+        <a href='https://linkedin.com/in/ahmedsefdine' target='_blank'><img src='https://img.shields.io/badge/LinkedIn-%230A66C2.svg?style=for-the-badge&logo=linkedin&logoColor=white' height='30'></a>
+        <a href='https://x.com/ahmedsefdine' target='_blank'><img src='https://img.shields.io/badge/X-%2312100E.svg?style=for-the-badge&logo=x&logoColor=white' height='30'></a>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Ajouter l'appel au footer en bas de chaque page
+if menu == "Aide & Contact":
+    a_propos()
+
+footer()
+
 
 def contact():
     st.title("📩 Contact")
