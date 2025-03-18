@@ -99,7 +99,7 @@ def accueil():
     - 🤖 Prédiction multi-modèles de survie
     - 📤 Export des résultats cliniques
     """)
-
+  
 def analyse_descriptive():
     st.title("📊 Analyse Exploratoire")
     df = load_data()
@@ -158,7 +158,7 @@ def modelisation():
                     # Si c'est un modèle CoxPHFitter
                     if isinstance(model, CoxPHFitter):
                         # Réorganiser les colonnes en fonction du modèle
-                        input_df = input_df[model.params_.index]  
+                        input_df = input_df[model.params_.index.tolist()]  
                         prediction = model.predict_median(input_df)
                         st.metric(label="Survie médiane estimée", value=f"{prediction[0]:.1f} mois")
                 else:
@@ -187,7 +187,7 @@ def a_propos():
             st.image(TEAM_IMG_PATH, width=150)
     
     with cols[1]:
-        st.markdown("""
+        st.markdown(""" 
         ### Équipe  
         - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences (UAD Bambey)  
         - **🎓 PhD. Idrissa Sy** - PhD en Statistiques (UAD Bambey)  
@@ -199,12 +199,10 @@ def a_propos():
 
 def contact():
     st.title("📩 Contact")
-    st.markdown("""
+    st.markdown(""" 
     #### Coordonnées
     **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
-    
-    **Téléphone**: +221 77 808 09 42
-    
+    **Téléphone**: +221 77 808 09 42  
     **Email**: ahmed.sefdine@uadb.edu.sn
     """)
     with st.form("contact_form"):
