@@ -75,7 +75,7 @@ def encode_features(inputs):
     Encode les variables catégorielles en format numérique (0/1).
     Chaque entrée "Oui" devient 1, "Non" devient 0.
     """
-    return pd.DataFrame({k: [1 if v == "Oui" else 0] for k, v in inputs.items()})
+    return pd.DataFrame({k: [1 if v == "OUI" else 0] for k, v in inputs.items()})
 
 # ----------------------------------------------------------
 # Définition des Pages
