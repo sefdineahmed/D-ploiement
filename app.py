@@ -179,24 +179,7 @@ def a_propos():
 
         Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
         Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
-
-        **Version** : `2.1.0`  
-        **Dernière mise à jour** : `Mars 2025`
         """)
-
-# Ajouter un pied de page avec les liens sociaux
-def footer():
-    """ Affichage du pied de page avec les liens sociaux """
-    st.markdown("---")
-    st.markdown("""
-    <div style='text-align: center;'>
-        <p>Développé par <b>Ahmed Sefdine</b> | 📅 Mars 2025</p>
-        <p>Suivez-nous sur :</p>
-        <a href='https://github.com/ahmedsefdine' target='_blank'><img src='https://img.shields.io/badge/GitHub-%2312100E.svg?style=for-the-badge&logo=github&logoColor=white' height='30'></a>
-        <a href='https://linkedin.com/in/ahmedsefdine' target='_blank'><img src='https://img.shields.io/badge/LinkedIn-%230A66C2.svg?style=for-the-badge&logo=linkedin&logoColor=white' height='30'></a>
-        <a href='https://x.com/ahmedsefdine' target='_blank'><img src='https://img.shields.io/badge/X-%2312100E.svg?style=for-the-badge&logo=x&logoColor=white' height='30'></a>
-    </div>
-    """, unsafe_allow_html=True)
 
 def a_propos():
     # Section "À propos"
@@ -214,22 +197,14 @@ def a_propos():
         - **PhD. Idrissa Sy** - PhD (UAD Bambey)  
         - **M. Ahmed Sefdine** - Data Scientist
         """)
-    
-    # Conteneur pour les liens sociaux
-    st.markdown("""
-    ### Liens Utiles
-    - [![GitHub](https://img.icons8.com/ios-filled/50/000000/github.png)](https://github.com/sefdineahmed) GitHub  
-    - [![LinkedIn](https://img.icons8.com/ios-filled/50/000000/linkedin.png)](https://www.linkedin.com/in/sefdineahmed) LinkedIn  
-    - [![Twitter](https://img.icons8.com/ios-filled/50/000000/twitter.png)](https://twitter.com/sefdineahmed) X (Twitter)  
 
-    N'hésitez pas à consulter ces liens pour plus d'informations ou pour contribuer au projet.
-    """)
     
     # Section Copyright
     st.markdown("""
     ---
     <div style="text-align: center; font-size: 14px;">
-        &copy; 2025 M. Ahmed Sefdine. Tous droits réservés.
+        &copy; 2025 M. Ahmed Sefdine. Tous droits réservés.  - [![GitHub](https://img.icons8.com/ios-filled/50/000000/github.png)](https://github.com/sefdineahmed) GitHub  
+ - [![LinkedIn](https://img.icons8.com/ios-filled/50/000000/linkedin.png)](https://www.linkedin.com/in/sefdineahmed) LinkedIn  - [![Twitter](https://img.icons8.com/ios-filled/50/000000/twitter.png)](https://twitter.com/sefdineahmed) X (Twitter) 
     </div>
     """,
     unsafe_allow_html=True)
