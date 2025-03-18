@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import streamlit as st
 import pandas as pd
 import joblib
@@ -33,19 +32,18 @@ MODELS = {
 
 # Configuration des variables (catégorielles -> Oui/Non)
 FEATURE_CONFIG = {
-    "Denitrution":"Dénutrition",
-    "AGE":"Age",
     "Cardiopathie": "Cardiopathie",
     "Ulceregastrique": "Ulcère gastrique",
     "Douleurepigastrique": "Douleur épigastrique",
     "Ulcero-bourgeonnant": "Lésion ulcéro-bourgeonnante",
-    "Denutrution": "Dénutrition",
+    "Denitrution": "Dénutrition",
     "Tabac": "Tabagisme actif",
     "Mucineux": "Type mucineux",
     "Infiltrant": "Type infiltrant",
     "Stenosant": "Type sténosant",
     "Metastases": "Métastases",
-    "Adenopathie": "Adénopathie"
+    "Adenopathie": "Adénopathie",
+    "AGE": "Âge",
 }
 
 # ----------------------------------------------------------
@@ -108,7 +106,7 @@ def analyse_descriptive():
         return
 
     with st.expander("🔍 Aperçu des données brutes", expanded=True):
-        st.dataframe(df.head(10))
+        st.dataframe(df.head(5))
         st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
     
     st.markdown("---")
@@ -141,6 +139,12 @@ def modelisation():
     input_df = encode_features(inputs)
     st.markdown("---")
     
+    # Vérifier si toutes les colonnes nécessaires sont présentes
+    missing_columns = [col for col in FEATURE_CONFIG.keys() if col not in input_df.columns]
+    if missing_columns:
+        st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
+        return
+    
     # Affichage des résultats dans des onglets alignés en haut
     tabs = st.tabs(list(MODELS.keys()))
     for tab, model_name in zip(tabs, MODELS.keys()):
@@ -151,6 +155,8 @@ def modelisation():
                     if model_name == "Cox PH":
                         # Si c'est un modèle CoxPHFitter
                         if isinstance(model, CoxPHFitter):
+                            # Assurez-vous que les colonnes du modèle et les données d'entrée sont les mêmes
+                            input_df = input_df[model.params_.index]  # Réorganise les colonnes en fonction du modèle
                             prediction = model.predict_median(input_df)
                             st.metric(label="Survie médiane estimée", value=f"{prediction.values[0]:.1f} mois")
                     else:
