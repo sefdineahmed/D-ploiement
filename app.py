@@ -160,9 +160,6 @@ def modelisation():
                 except Exception as e:
                     st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
-import os
-
-TEAM_IMG_PATH = "assets/team.jpg"
 
 def a_propos():
     """ Affichage de la section À Propos """
