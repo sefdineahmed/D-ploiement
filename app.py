@@ -41,7 +41,7 @@ DATA_PATH = "data/GastricCancerData.xlsx"
 LOGO_PATH = "assets/header.jpg"
 TEAM_IMG_PATH = "assets/team.jpg"
 
-# Configuration des modèles (ajout du modèle DeepSurv)
+# Configuration des modèles (incluant DeepSurv)
 MODELS = {
     "Cox PH": "models/coxph.joblib",
     "RSF": "models/rsf.joblib",
@@ -51,7 +51,8 @@ MODELS = {
 
 # ----------------------------------------------------------
 # Configuration des variables
-# Nous ajoutons "Âge" pour satisfaire le modèle DeepSurv (12 features)
+# On ajoute "Âge" pour que DeepSurv reçoive 12 features
+# Les autres variables sont catégorielles (Oui/Non)
 # ----------------------------------------------------------
 FEATURE_CONFIG = {
     "Age": "Âge",
@@ -150,7 +151,7 @@ def analyse_descriptive():
         st.dataframe(df.head(10))
         st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
     
-    # Histogramme d'une variable
+    # Histogramme et matrice de corrélation
     st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
@@ -159,19 +160,19 @@ def analyse_descriptive():
         fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
         st.plotly_chart(fig, use_container_width=True)
     
-    # Matrice de corrélation
     with col2:
         st.subheader("🌡 Matrice de corrélation")
         numeric_df = df.select_dtypes(include=["number"])
         corr_matrix = numeric_df.corr()
         fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
         st.plotly_chart(fig, use_container_width=True)
-
+    
     # ----------------------------
-    # Analyse de survie (Kaplan-Meier)
+    # Analyse de survie : Kaplan-Meier
     # ----------------------------
     st.markdown("---")
     st.subheader("📉 Courbe de survie Kaplan-Meier")
+    # Vérifier la présence des colonnes requises
     required_cols = ["Traitement", "Deces", "Tempsdesuivi (Mois)"]
     if not all(col in df.columns for col in required_cols):
         st.error(f"Les colonnes requises pour l'analyse de survie ne sont pas toutes présentes. Recherchez : {required_cols}")
@@ -190,7 +191,6 @@ def analyse_descriptive():
         if "Traitement" not in df.columns:
             st.error("La colonne 'Traitement' est absente.")
         else:
-            # Supposons que la colonne "Traitement" indique deux groupes (par exemple "A" et "B")
             groupes = df["Traitement"].unique()
             if len(groupes) != 2:
                 st.warning("Le test de log-rank nécessite exactement 2 groupes de traitement.")
@@ -204,7 +204,6 @@ def analyse_descriptive():
                     event_observed_B=group2["Deces"]
                 )
                 st.write(f"Test de log-rank p-value : {results.p_value:.4f}")
-                # Affichage d'un histogramme du traitement
                 fig_treat = px.histogram(df, x="Traitement", color="Traitement",
                                          title="Distribution des traitements")
                 st.plotly_chart(fig_treat, use_container_width=True)
@@ -214,9 +213,9 @@ def analyse_descriptive():
     # ----------------------------
     st.markdown("---")
     st.subheader("🔍 Aperçu des features utilisées (après encodage)")
-    inputs = {key: "Oui" if key in FEATURE_CONFIG and key != "Age" else 50 for key in FEATURE_CONFIG.keys()}
-    # Simulation d'encodage pour affichage
-    encoded_df = encode_features(inputs)
+    # Simulation d'encodage pour affichage (valeurs par défaut)
+    sample_inputs = {key: (50 if key=="Age" else "Oui") for key in FEATURE_CONFIG.keys()}
+    encoded_df = encode_features(sample_inputs)
     st.dataframe(encoded_df)
 
 def modelisation():
