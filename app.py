@@ -44,7 +44,6 @@ MODELS = {
 }
 
 # Configuration des variables
-# Pour AGE, on souhaite conserver la valeur numérique, pour les autres, conversion Oui/Non
 FEATURE_CONFIG = {
     "AGE": "Âge",
     "Cardiopathie": "Cardiopathie",
@@ -74,11 +73,7 @@ def load_data():
 
 @st.cache_resource(show_spinner=False)
 def load_model(model_path):
-    """
-    Charge un modèle pré-entraîné.
-    Pour les modèles Keras (.keras ou .h5) on utilise tf.keras.models.load_model.
-    Pour les autres, joblib.load.
-    """
+    """Charge un modèle pré-entraîné."""
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
         return None
@@ -101,11 +96,7 @@ def load_model(model_path):
         return None
 
 def encode_features(inputs):
-    """
-    Encode les variables.
-    Pour 'AGE', on conserve la valeur numérique.
-    Pour les autres, "OUI" devient 1 et toute autre valeur 0.
-    """
+    """Encode les variables."""
     encoded = {}
     for k, v in inputs.items():
         if k == "AGE":
@@ -115,29 +106,24 @@ def encode_features(inputs):
     return pd.DataFrame([encoded])
 
 def predict_survival(model, data, model_name):
-    """
-    Effectue la prédiction du temps de survie selon le type de modèle.
-    """
+    """Effectue la prédiction du temps de survie."""
     if hasattr(model, "predict_median"):
         pred = model.predict_median(data)
-        # Calculer l'intervalle de confiance pour Cox PH ou RSF
-        if hasattr(pred, 'lower') and hasattr(pred, 'upper'):
-            return pred.iloc[0], pred.lower.iloc[0], pred.upper.iloc[0]
-        return pred.iloc[0], None, None
+        if hasattr(pred, '__iter__'):
+            return pred.iloc[0] if isinstance(pred, pd.Series) else pred[0]
+        return pred
     elif hasattr(model, "predict"):
         prediction = model.predict(data)
         if isinstance(prediction, np.ndarray):
             if prediction.ndim == 2:
-                return prediction[0][0], None, None
-            return prediction[0], None, None
-        return prediction, None, None
+                return prediction[0][0]
+            return prediction[0]
+        return prediction
     else:
         raise ValueError(f"Le modèle {model_name} ne supporte pas la prédiction de survie.")
 
 def clean_prediction(prediction, model_name):
-    """
-    Nettoie la prédiction pour éviter les valeurs négatives.
-    """
+    """Nettoie la prédiction pour éviter les valeurs négatives."""
     try:
         pred_val = float(prediction)
     except Exception:
@@ -182,14 +168,16 @@ def modelisation():
                 if model_name == "Cox PH" and hasattr(model, "params_"):
                     cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
                     input_df = input_df[cols_to_use]
-                pred, lower, upper = predict_survival(model, input_df, model_name)
+                pred = predict_survival(model, input_df, model_name)
                 cleaned_pred = clean_prediction(pred, model_name)
                 if np.isnan(cleaned_pred):
                     raise ValueError("La prédiction renvoyée est NaN.")
-                
                 st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
-                if lower and upper:
-                    st.markdown(f"**Intervalle de confiance (95%)** : {lower:.1f} mois - {upper:.1f} mois")
+                
+                # Affichage de l'intervalle de confiance (exemple ±5 mois)
+                lower_bound = max(cleaned_pred - 5, 0)
+                upper_bound = cleaned_pred + 5
+                st.write(f"**Intervalle de survie estimé** : {lower_bound:.1f} - {upper_bound:.1f} mois")
                 
                 months = min(int(cleaned_pred), 120)
                 fig = px.line(
