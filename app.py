@@ -203,11 +203,11 @@ def a_propos():
     st.markdown("""
     ---
     <div style="text-align: center; font-size: 14px;">
-        &copy; 2025 M. Ahmed Sefdine. Tous droits réservés.  
+        &copy; 2025 M. Ahmed Sefdine. Tous droits réservés. 
+    </div>
         - [![GitHub](https://img.icons8.com/ios-filled/50/000000/github.png)](https://github.com/sefdineahmed) GitHub  
         - [![LinkedIn](https://img.icons8.com/ios-filled/50/000000/linkedin.png)](https://www.linkedin.com/in/sefdineahmed) LinkedIn  
         - [![Twitter](https://img.icons8.com/ios-filled/50/000000/twitter.png)](https://twitter.com/sefdineahmed) X (Twitter)
-    </div>
     """, unsafe_allow_html=True)
 
 
