@@ -253,9 +253,9 @@ def a_propos():
         st.markdown(
             """
         ### Équipe  
-        - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences (UAD Bambey)  
-        - **🎓 PhD. Idrissa Sy** - PhD en Statistiques (UAD Bambey)  
-        - **💻 M. Ahmed Sefdine** - Data Scientist  
+        - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences à l'Universite Alioune diop de Bambey
+        - **🎓 PhD. Idrissa Sy** - Enseigant Chercheur à l'Universite Alioune diop de Bambey 
+        - **💻 M. Ahmed Sefdine** - Student à l'Universite Alioune diop de Bambey  
 
         Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
         Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
@@ -267,9 +267,12 @@ def contact():
     st.markdown(
         """
     #### Coordonnées
-    🌍: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
-    📞: +221 77 808 09 42
-    📩: ahmed.sefdine@uadb.edu.sn
+    
+    🌍Localisation: Bambey, BP 13, Sénégal
+    
+    📞 Telephone : +221 77 808 09 42
+    
+    📩 E-mail: ahmed.sefdine@uadb.edu.sn
     """
     )
     with st.form("contact_form"):
