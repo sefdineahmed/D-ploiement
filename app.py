@@ -84,7 +84,7 @@ def load_model(model_path):
             def cox_loss(y_true, y_pred):
                 event = tf.cast(y_true[:, 0], dtype=tf.float32)
                 risk = y_pred[:, 0]
-                log_risk = tf.math.log(tf.cumsum(tf.exp(risk), reverse=True)
+                log_risk = tf.math.log(tf.cumsum(tf.exp(risk), reverse=True))
                 loss = -tf.reduce_mean((risk - log_risk) * event)
                 return loss
             return tf_load_model(model_path, custom_objects={"cox_loss": cox_loss})
