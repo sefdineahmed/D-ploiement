@@ -32,8 +32,10 @@ MODELS = {
     "GBST": "models/gbst.joblib"
 }
 
-# Configuration des variables (catégorielles -> Oui/Non)
+# Configuration des variables
+# Pour AGE, on souhaite conserver la valeur numérique, pour les autres, conversion Oui/Non
 FEATURE_CONFIG = {
+    "AGE": "Âge",
     "Cardiopathie": "Cardiopathie",
     "Ulceregastrique": "Ulcère gastrique",
     "Douleurepigastrique": "Douleur épigastrique",
@@ -45,7 +47,6 @@ FEATURE_CONFIG = {
     "Stenosant": "Type sténosant",
     "Metastases": "Métastases",
     "Adenopathie": "Adénopathie",
-    "AGE": "Âge",
 }
 
 # ----------------------------------------------------------
@@ -64,9 +65,9 @@ def load_data():
 def load_model(model_path):
     """
     Charge un modèle pré-entraîné.
-    Pour les modèles Keras (.keras) on utilise tf.keras.models.load_model avec les custom_objects.
-    Pour les autres modèles, on utilise joblib.load.
-    Pour le modèle RSF, on applique un monkey patch pour éviter l'erreur liée à get_tags.
+    Pour les modèles Keras (.keras ou .h5) on utilise tf.keras.models.load_model.
+    Pour les autres, joblib.load.
+    Pour le modèle RSF, on applique un monkey patch sur _check_n_features si nécessaire.
     """
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
@@ -74,20 +75,22 @@ def load_model(model_path):
 
     try:
         _, ext = os.path.splitext(model_path)
-        # Correction spécifique pour RSF : patch pour get_tags si besoin
+        # Correction spécifique pour RSF : patch sur _check_n_features
         if "rsf" in model_path.lower():
             try:
-                from sklearn.utils._tags import get_tags
+                from sklearn.utils.validation import _check_n_features
             except ImportError:
-                # Si get_tags n'existe pas, on définit un stub minimal
-                def get_tags(estimator):
-                    return {}
-                import sklearn.utils._tags as sk_tags
-                sk_tags.get_tags = get_tags
+                # Définition d'un stub minimal pour _check_n_features
+                def _check_n_features(X, n_features):
+                    return X
+                try:
+                    import sklearn.utils.validation as sk_validation
+                    sk_validation._check_n_features = _check_n_features
+                except Exception:
+                    pass
 
         if ext in ['.keras', '.h5']:
-            # Pour les modèles Keras, on peut avoir besoin d'une fonction de perte personnalisée
-            # Ici, on définit une fonction cox_loss minimaliste si nécessaire
+            # Définition d'une fonction de perte custom si besoin (pour DeepSurv par exemple)
             def cox_loss(y_true, y_pred):
                 event = tf.cast(y_true[:, 0], dtype=tf.float32)
                 risk = y_pred[:, 0]
@@ -103,29 +106,31 @@ def load_model(model_path):
 
 def encode_features(inputs):
     """
-    Encode les variables catégorielles en format numérique (0/1).
-    Chaque entrée "Oui" devient 1, "Non" devient 0.
+    Encode les variables.
+    Pour la variable 'AGE', on conserve la valeur numérique.
+    Pour les autres variables, "OUI" est converti en 1 et toute autre valeur en 0.
     """
-    return pd.DataFrame({k: [1 if v.upper() == "OUI" else 0] for k, v in inputs.items()})
+    encoded = {}
+    for k, v in inputs.items():
+        if k == "AGE":
+            encoded[k] = v  # Conserver la valeur numérique
+        else:
+            encoded[k] = 1 if v.upper() == "OUI" else 0
+    return pd.DataFrame([encoded])
 
 def predict_survival(model, data, model_name):
     """
     Effectue la prédiction du temps de survie selon le type de modèle.
     Pour CoxPHFitter, on utilise predict_median.
-    Pour les autres modèles, on suppose que la méthode predict retourne un array numpy.
+    Pour les autres modèles, on suppose que model.predict retourne un tableau numpy.
     """
-    # Cas pour CoxPHFitter (Cox PH)
     if hasattr(model, "predict_median"):
         pred = model.predict_median(data)
-        # Si la prédiction est une Series ou un DataFrame, on prend la première valeur
         if hasattr(pred, '__iter__'):
             return pred.iloc[0] if isinstance(pred, pd.Series) else pred[0]
         return pred
-
-    # Cas pour RSF, GBST ou DeepSurv
     elif hasattr(model, "predict"):
         prediction = model.predict(data)
-        # Pour DeepSurv, la prédiction est souvent un tableau 2D
         if isinstance(prediction, np.ndarray):
             if prediction.ndim == 2:
                 return prediction[0][0]
@@ -138,14 +143,16 @@ def clean_prediction(prediction, model_name):
     """
     Nettoie la prédiction pour éviter les valeurs négatives et renvoie la valeur ajustée.
     """
-    # Pour Cox PH et RSF, on retourne la valeur maximale entre la prédiction et 0
+    try:
+        pred_val = float(prediction)
+    except Exception:
+        pred_val = 0
     if model_name in ["Cox PH", "RSF", "GBST"]:
-        return max(prediction, 0)
-    # Pour DeepSurv, on s'assure que la prédiction est au moins 1 (par exemple 1 mois)
+        return max(pred_val, 0)
     elif model_name == "DeepSurv":
-        return max(prediction, 1)
+        return max(pred_val, 1)
     else:
-        return prediction
+        return pred_val
 
 # ----------------------------------------------------------
 # Définition des Pages
@@ -203,8 +210,13 @@ def modelisation():
         cols = st.columns(3)
         for i, (feature, label) in enumerate(FEATURE_CONFIG.items()):
             with cols[i % 3]:
-                inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
+                # Pour AGE, on utilise un number_input, sinon un selectbox
+                if feature == "AGE":
+                    inputs[feature] = st.number_input(label, min_value=18, max_value=120, value=50, key=feature)
+                else:
+                    inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
     
+    # Encodage des variables avec gestion particulière pour AGE
     input_df = encode_features(inputs)
     st.markdown("---")
     
@@ -220,12 +232,14 @@ def modelisation():
     if st.button("Prédire le temps de survie"):
         if model:
             try:
-                # Pour le modèle Cox PH, s'assurer que les colonnes utilisées correspondent
+                # Pour le modèle Cox PH, réordonner les colonnes si nécessaire
                 if model_name == "Cox PH" and hasattr(model, "params_"):
                     cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
                     input_df = input_df[cols_to_use]
                 pred = predict_survival(model, input_df, model_name)
                 cleaned_pred = clean_prediction(pred, model_name)
+                if np.isnan(cleaned_pred):
+                    raise ValueError("La prédiction renvoyée est NaN.")
                 st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
                 
                 # Visualisation optionnelle : courbe de survie
