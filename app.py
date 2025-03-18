@@ -203,27 +203,9 @@ def a_propos():
     st.markdown("""
     ---
     <div style="text-align: center; font-size: 14px;">
-        &copy; 2025 M. Ahmed Sefdine. Tous droits réservés. 
-    </div>
-    """, 
-        unsafe_allow_html=True)
-    import streamlit as st
-
-def a_propos():
-    # Section "À propos"
-    st.title("📚 À Propos")
-    
-    # Section Copyright et Liens sociaux en ligne
-    st.markdown("""
-    ---
-    <div style="text-align: center; font-size: 14px;">
-        &copy; 2025 M. Ahmed Sefdine. Tous droits réservés.  
-        - [![GitHub](https://img.icons8.com/ios-filled/50/000000/github.png)](https://github.com/sefdineahmed) GitHub  
-        - [![LinkedIn](https://img.icons8.com/ios-filled/50/000000/linkedin.png)](https://www.linkedin.com/in/sefdineahmed) LinkedIn  
-        - [![Twitter](https://img.icons8.com/ios-filled/50/000000/twitter.png)](https://twitter.com/sefdineahmed) X (Twitter)
+        &copy; 2025 M. Ahmed Sefdine - Data Scientist. Tous droits réservés. 
     </div>
     """, unsafe_allow_html=True)
-
 
 
 def contact():
