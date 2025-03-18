@@ -50,6 +50,8 @@ MODELS = {
 
 # ----------------------------------------------------------
 # Configuration des variables
+# Nous ajoutons "Age" pour satisfaire l'exigence du modèle DeepSurv (12 features)
+# Les autres variables restent catégorielles (Oui/Non)
 # ----------------------------------------------------------
 FEATURE_CONFIG = {
     "Age": "Âge",
@@ -73,6 +75,7 @@ FEATURE_CONFIG = {
 def cox_loss(y_true, y_pred):
     """
     Implémente la fonction de perte Cox.
+    Remplacez cette implémentation par celle utilisée lors de l'entraînement.
     """
     return tf.reduce_mean(tf.square(y_true - y_pred))
 
@@ -105,7 +108,7 @@ def load_model(model_path):
 def encode_features(inputs):
     """
     Encode les variables en format numérique.
-    Pour les variables catégorielles : "Oui" devient 1, "Non" devient 0.
+    Pour les variables catégorielles : "OUI" devient 1, sinon 0.
     Pour les variables numériques, on conserve la valeur.
     """
     encoded = {}
@@ -113,12 +116,29 @@ def encode_features(inputs):
         if isinstance(value, (int, float)):
             encoded[key] = [value]
         else:
-            encoded[key] = [1 if value == "OUI" else 0]
+            encoded[key] = [1 if value.upper() == "OUI" else 0]
     return pd.DataFrame(encoded)
 
 # ----------------------------------------------------------
 # Définition des Pages
 # ----------------------------------------------------------
+def accueil():
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        if os.path.exists(LOGO_PATH):
+            st.image(LOGO_PATH, width=200)
+    with col2:
+        st.title("🩺 OncoSuite - Plateforme d'Aide à la Décision")
+        st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
+    st.markdown("---")
+    st.write("""
+    ### Fonctionnalités principales :
+    - 📊 Exploration interactive des données cliniques
+    - 📈 Analyse statistique descriptive
+    - 🤖 Prédiction multi-modèles de survie
+    - 📤 Export des résultats cliniques
+    """)
+
 def analyse_descriptive():
     st.title("📊 Analyse Exploratoire")
     df = load_data()
@@ -156,20 +176,91 @@ def analyse_descriptive():
         # Courbe de survie Kaplan-Meier
         if "Tempsdesuivi (Mois)" in df.columns and "Deces" in df.columns:
             st.subheader("📉 Courbe de survie Kaplan-Meier")
-            
-            # Nettoyage des données (suppression des NaN et valeurs infinies)
+            # Nettoyage des données : suppression des NaN et filtrage des valeurs raisonnables
             df_clean = df.dropna(subset=["Tempsdesuivi (Mois)", "Deces"])
             df_clean = df_clean[(df_clean["Tempsdesuivi (Mois)"] > 0) & (df_clean["Tempsdesuivi (Mois)"] < 120)]
-            
-            kmf = KaplanMeierFitter()
-            kmf.fit(durations=df_clean["Tempsdesuivi (Mois)"], event_observed=df_clean["Deces"])
-            km_data = kmf.survival_function_.reset_index()
-            fig_km = px.line(km_data, x="index", y=km_data.columns[1],
-                             labels={"index": "Temps", km_data.columns[1]: "Survie"},
-                             title="Courbe de survie Kaplan-Meier")
-            st.plotly_chart(fig_km, use_container_width=True)
+            if not df_clean.empty:
+                kmf = KaplanMeierFitter()
+                kmf.fit(durations=df_clean["Tempsdesuivi (Mois)"], event_observed=df_clean["Deces"])
+                km_data = kmf.survival_function_.reset_index()
+                fig_km = px.line(km_data, x="index", y=km_data.columns[1],
+                                 labels={"index": "Temps", km_data.columns[1]: "Survie"},
+                                 title="Courbe de survie Kaplan-Meier")
+                st.plotly_chart(fig_km, use_container_width=True)
+            else:
+                st.warning("Les données nettoyées pour la courbe Kaplan-Meier sont vides.")
         else:
             st.warning("Les colonnes 'Tempsdesuivi (Mois)' et 'Deces' sont manquantes ou mal formatées.")
+
+def modelisation():
+    st.title("🤖 Prédiction de Survie")
+    
+    with st.expander("📋 Paramètres du patient", expanded=True):
+        inputs = {}
+        cols = st.columns(3)
+        for i, (feature, label) in enumerate(FEATURE_CONFIG.items()):
+            with cols[i % 3]:
+                if feature == "Age":
+                    inputs[feature] = st.number_input(label, min_value=0, max_value=120, value=50, step=1, key=feature)
+                else:
+                    inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
+    
+    input_df = encode_features(inputs)
+    st.markdown("---")
+    
+    tabs = st.tabs(list(MODELS.keys()))
+    for tab, model_name in zip(tabs, MODELS.keys()):
+        with tab:
+            model = load_model(MODELS[model_name])
+            if model:
+                try:
+                    prediction = model.predict(input_df)[0]
+                    # Convertir la prédiction en float pour l'affichage
+                    prediction_val = float(prediction.item()) if hasattr(prediction, "item") else float(prediction)
+                    st.metric(label="Survie médiane estimée", value=f"{prediction_val:.1f} mois")
+                    
+                    months = min(int(prediction_val), 120)
+                    fig = px.line(
+                        x=list(range(months)),
+                        y=[100 - (i / months) * 100 for i in range(months)],
+                        labels={"x": "Mois", "y": "Probabilité de survie (%)"},
+                        color_discrete_sequence=['#2ca02c']
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                except Exception as e:
+                    st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
+
+def a_propos():
+    st.title("📚 À Propos")
+    cols = st.columns([1, 3])
+    with cols[0]:
+        if os.path.exists(TEAM_IMG_PATH):
+            st.image(TEAM_IMG_PATH)
+    with cols[1]:
+        st.markdown("""
+        ### Équipe Médicale
+        - **Dr. Alioune Diop** - Oncologue
+        - **Pr. Aminata Ndiaye** - Chirurgien Digestif
+        - **M. Jean Dupont** - Data Scientist
+        
+        **Version**: 2.1.0  
+        **Dernière mise à jour**: Juin 2024
+        """)
+
+def contact():
+    st.title("📩 Contact")
+    st.markdown("""
+    #### Coordonnées
+    **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
+    **Téléphone**: +221 33 839 50 00  
+    **Email**: contact@oncosuite.sn
+    """)
+    with st.form("contact_form"):
+        name = st.text_input("Nom complet")
+        email = st.text_input("Email")
+        message = st.text_area("Message")
+        if st.form_submit_button("Envoyer"):
+            st.success("✅ Message envoyé avec succès !")
 
 # ----------------------------------------------------------
 # Navigation Principale (Onglets en haut)
