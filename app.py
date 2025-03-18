@@ -5,6 +5,7 @@ import joblib
 import tensorflow as tf
 import plotly.express as px
 from PIL import Image
+from lifelines import CoxPHFitter
 
 # ----------------------------------------------------------
 # Configuration de l'application
@@ -89,7 +90,7 @@ def accueil():
         st.title("⚕️ Plateforme d'Aide à la Décision")
         st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
     st.markdown("---")
-    st.write("""
+    st.write(""" 
     ### Fonctionnalités principales :
     - 📊 Exploration interactive des données cliniques
     - 📈 Analyse statistique descriptive
@@ -144,9 +145,15 @@ def modelisation():
             model = load_model(MODELS[model_name])
             if model:
                 try:
-                    # La prédiction retourne un tableau, on récupère le premier élément
-                    prediction = model.predict(input_df)[0]
-                    st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
+                    if model_name == "Cox PH":
+                        # Si c'est un modèle CoxPHFitter
+                        if isinstance(model, CoxPHFitter):
+                            prediction = model.predict_median(input_df)
+                            st.metric(label="Survie médiane estimée", value=f"{prediction.values[0]:.1f} mois")
+                    else:
+                        # Pour les autres modèles
+                        prediction = model.predict(input_df)[0]
+                        st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
                     
                     # Visualisation optionnelle : courbe de survie
                     months = min(int(prediction), 120)
@@ -160,10 +167,10 @@ def modelisation():
                 except Exception as e:
                     st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
+
 def a_propos():
     """ Affichage de la section À Propos """
     st.title("📚 À Propos")
-
     cols = st.columns([1, 3])
     with cols[0]:
         if os.path.exists(TEAM_IMG_PATH):
@@ -180,24 +187,14 @@ def a_propos():
         Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
         """)
 
-    # Conteneur pour les liens sociaux et copyright sur la même ligne
-    st.markdown("""
-    ---
-    <div style="text-align: center; font-size: 14px;">
-        &copy; 2025 M. Ahmed Sefdine - Data Scientist. Tous droits réservés.  
-        - [![GitHub](https://img.icons8.com/ios-filled/50/000000/github.png)](https://github.com/sefdineahmed) GitHub  
-        - [![LinkedIn](https://img.icons8.com/ios-filled/50/000000/linkedin.png)](https://www.linkedin.com/in/sefdineahmed) LinkedIn  
-        - [![Twitter](https://img.icons8.com/ios-filled/50/000000/twitter.png)](https://twitter.com/sefdineahmed) X (Twitter)
-    </div>
-    """, unsafe_allow_html=True)
-
-
 def contact():
     st.title("📩 Contact")
     st.markdown("""
     #### Coordonnées
     **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
-    **Téléphone**: +221 77 808 09 42  
+    
+    **Téléphone**: +221 77 808 09 42
+    
     **Email**: ahmed.sefdine@uadb.edu.sn
     """)
     with st.form("contact_form"):
