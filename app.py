@@ -6,6 +6,7 @@ import tensorflow as tf
 import plotly.express as px
 from PIL import Image
 from lifelines import KaplanMeierFitter
+from lifelines.statistics import logrank_test
 
 # ----------------------------------------------------------
 # Patch pour les incompatibilités de versions
@@ -50,8 +51,7 @@ MODELS = {
 
 # ----------------------------------------------------------
 # Configuration des variables
-# Nous ajoutons "Age" pour satisfaire l'exigence du modèle DeepSurv (12 features)
-# Les autres variables restent catégorielles (Oui/Non)
+# Nous ajoutons "Âge" pour satisfaire le modèle DeepSurv (12 features)
 # ----------------------------------------------------------
 FEATURE_CONFIG = {
     "Age": "Âge",
@@ -108,7 +108,7 @@ def load_model(model_path):
 def encode_features(inputs):
     """
     Encode les variables en format numérique.
-    Pour les variables catégorielles : "OUI" devient 1, sinon 0.
+    Pour les variables catégorielles : "Oui" devient 1, "Non" devient 0.
     Pour les variables numériques, on conserve la valeur.
     """
     encoded = {}
@@ -116,7 +116,7 @@ def encode_features(inputs):
         if isinstance(value, (int, float)):
             encoded[key] = [value]
         else:
-            encoded[key] = [1 if value.upper() == "OUI" else 0]
+            encoded[key] = [1 if value == "Oui" else 0]
     return pd.DataFrame(encoded)
 
 # ----------------------------------------------------------
@@ -145,52 +145,79 @@ def analyse_descriptive():
     if df.empty:
         return
 
+    # Affichage des données brutes
     with st.expander("🔍 Aperçu des données brutes", expanded=True):
         st.dataframe(df.head(10))
         st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
     
+    # Histogramme d'une variable
     st.markdown("---")
     col1, col2 = st.columns(2)
-    
     with col1:
         st.subheader("📈 Distribution des variables")
         selected_var = st.selectbox("Choisir une variable", df.columns)
         fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
         st.plotly_chart(fig, use_container_width=True)
-        
-        # Histogramme de la distribution du traitement
-        if "Traitement" in df.columns:
-            st.subheader("📊 Distribution du Traitement")
-            fig2 = px.histogram(df, x="Traitement", color_discrete_sequence=['#ff7f0e'])
-            st.plotly_chart(fig2, use_container_width=True)
-        else:
-            st.warning("La colonne 'Traitement' n'est pas disponible dans les données.")
     
+    # Matrice de corrélation
     with col2:
         st.subheader("🌡 Matrice de corrélation")
         numeric_df = df.select_dtypes(include=["number"])
         corr_matrix = numeric_df.corr()
         fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
         st.plotly_chart(fig, use_container_width=True)
-        
-        # Courbe de survie Kaplan-Meier
-        if "Tempsdesuivi (Mois)" in df.columns and "Deces" in df.columns:
-            st.subheader("📉 Courbe de survie Kaplan-Meier")
-            # Nettoyage des données : suppression des NaN et filtrage des valeurs raisonnables
-            df_clean = df.dropna(subset=["Tempsdesuivi (Mois)", "Deces"])
-            df_clean = df_clean[(df_clean["Tempsdesuivi (Mois)"] > 0) & (df_clean["Tempsdesuivi (Mois)"] < 120)]
-            if not df_clean.empty:
-                kmf = KaplanMeierFitter()
-                kmf.fit(durations=df_clean["Tempsdesuivi (Mois)"], event_observed=df_clean["Deces"])
-                km_data = kmf.survival_function_.reset_index()
-                fig_km = px.line(km_data, x="index", y=km_data.columns[1],
-                                 labels={"index": "Temps", km_data.columns[1]: "Survie"},
-                                 title="Courbe de survie Kaplan-Meier")
-                st.plotly_chart(fig_km, use_container_width=True)
-            else:
-                st.warning("Les données nettoyées pour la courbe Kaplan-Meier sont vides.")
+
+    # ----------------------------
+    # Analyse de survie (Kaplan-Meier)
+    # ----------------------------
+    st.markdown("---")
+    st.subheader("📉 Courbe de survie Kaplan-Meier")
+    required_cols = ["Traitement", "Deces", "Tempsdesuivi (Mois)"]
+    if not all(col in df.columns for col in required_cols):
+        st.error(f"Les colonnes requises pour l'analyse de survie ne sont pas toutes présentes. Recherchez : {required_cols}")
+    else:
+        kmf = KaplanMeierFitter()
+        T = df["Tempsdesuivi (Mois)"]
+        E = df["Deces"]
+        kmf.fit(T, event_observed=E, label="Survie")
+        fig_km = px.line(x=kmf.survival_function_.index, y=kmf.survival_function_["Survie"],
+                         labels={"x": "Temps (Mois)", "y": "Probabilité de survie"},
+                         title="Courbe de survie Kaplan-Meier")
+        st.plotly_chart(fig_km, use_container_width=True)
+
+        # Distribution du traitement et test de log-rank
+        st.subheader("📊 Distribution du traitement et test de log-rank")
+        if "Traitement" not in df.columns:
+            st.error("La colonne 'Traitement' est absente.")
         else:
-            st.warning("Les colonnes 'Tempsdesuivi (Mois)' et 'Deces' sont manquantes ou mal formatées.")
+            # Supposons que la colonne "Traitement" indique deux groupes (par exemple "A" et "B")
+            groupes = df["Traitement"].unique()
+            if len(groupes) != 2:
+                st.warning("Le test de log-rank nécessite exactement 2 groupes de traitement.")
+            else:
+                group1 = df[df["Traitement"] == groupes[0]]
+                group2 = df[df["Traitement"] == groupes[1]]
+                results = logrank_test(
+                    group1["Tempsdesuivi (Mois)"],
+                    group2["Tempsdesuivi (Mois)"],
+                    event_observed_A=group1["Deces"],
+                    event_observed_B=group2["Deces"]
+                )
+                st.write(f"Test de log-rank p-value : {results.p_value:.4f}")
+                # Affichage d'un histogramme du traitement
+                fig_treat = px.histogram(df, x="Traitement", color="Traitement",
+                                         title="Distribution des traitements")
+                st.plotly_chart(fig_treat, use_container_width=True)
+
+    # ----------------------------
+    # Feature Selection après encodage
+    # ----------------------------
+    st.markdown("---")
+    st.subheader("🔍 Aperçu des features utilisées (après encodage)")
+    inputs = {key: "Oui" if key in FEATURE_CONFIG and key != "Age" else 50 for key in FEATURE_CONFIG.keys()}
+    # Simulation d'encodage pour affichage
+    encoded_df = encode_features(inputs)
+    st.dataframe(encoded_df)
 
 def modelisation():
     st.title("🤖 Prédiction de Survie")
@@ -215,11 +242,9 @@ def modelisation():
             if model:
                 try:
                     prediction = model.predict(input_df)[0]
-                    # Convertir la prédiction en float pour l'affichage
-                    prediction_val = float(prediction.item()) if hasattr(prediction, "item") else float(prediction)
-                    st.metric(label="Survie médiane estimée", value=f"{prediction_val:.1f} mois")
+                    st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
                     
-                    months = min(int(prediction_val), 120)
+                    months = min(int(prediction), 120)
                     fig = px.line(
                         x=list(range(months)),
                         y=[100 - (i / months) * 100 for i in range(months)],
