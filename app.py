@@ -3,9 +3,8 @@ import streamlit as st
 import pandas as pd
 import joblib
 import tensorflow as tf
-import plotly.express as px
-from PIL import Image
 from lifelines import CoxPHFitter
+from sklearn.preprocessing import StandardScaler
 
 # ----------------------------------------------------------
 # Configuration de l'application
@@ -22,28 +21,12 @@ DATA_PATH = "data/GastricCancerData.xlsx"
 LOGO_PATH = "assets/header.jpg"
 TEAM_IMG_PATH = "assets/team.jpg"
 
-# Configuration des modèles (ajout du modèle DeepSurv)
+# Modèles
 MODELS = {
     "Cox PH": "models/coxph.joblib",
     "RSF": "models/rsf.joblib",
     "DeepSurv": "models/deepsurv.keras",
     "GBST": "models/gbst.joblib"
-}
-
-# Configuration des variables (catégorielles -> Oui/Non)
-FEATURE_CONFIG = {
-    "Cardiopathie": "Cardiopathie",
-    "Ulceregastrique": "Ulcère gastrique",
-    "Douleurepigastrique": "Douleur épigastrique",
-    "Ulcero-bourgeonnant": "Lésion ulcéro-bourgeonnante",
-    "Denitrution": "Dénutrition",
-    "Tabac": "Tabagisme actif",
-    "Mucineux": "Type mucineux",
-    "Infiltrant": "Type infiltrant",
-    "Stenosant": "Type sténosant",
-    "Metastases": "Métastases",
-    "Adenopathie": "Adénopathie",
-    "AGE": "Âge",
 }
 
 # ----------------------------------------------------------
@@ -99,33 +82,6 @@ def accueil():
     - 📤 Export des résultats cliniques
     """)
 
-def analyse_descriptive():
-    st.title("📊 Analyse Exploratoire")
-    df = load_data()
-    if df.empty:
-        return
-
-    with st.expander("🔍 Aperçu des données brutes", expanded=True):
-        st.dataframe(df.head(5))
-        st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
-    
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📈 Distribution des variables")
-        selected_var = st.selectbox("Choisir une variable", df.columns)
-        fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        st.subheader("🌡 Matrice de corrélation")
-        # Sélection uniquement des colonnes numériques
-        numeric_df = df.select_dtypes(include=["number"])
-        corr_matrix = numeric_df.corr()
-        fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
-        st.plotly_chart(fig, use_container_width=True)
-
 def modelisation():
     st.title("🤖 Prédiction de Survie")
     
@@ -139,43 +95,40 @@ def modelisation():
     input_df = encode_features(inputs)
     st.markdown("---")
     
-    # Vérifier si toutes les colonnes nécessaires sont présentes
-    missing_columns = [col for col in FEATURE_CONFIG.keys() if col not in input_df.columns]
-    if missing_columns:
-        st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
-        return
+    # Vérification de la sélection du modèle
+    model_choice = st.selectbox("Choisissez un modèle", list(MODELS.keys()))
     
-    # Affichage des résultats dans des onglets alignés en haut
-    tabs = st.tabs(list(MODELS.keys()))
-    for tab, model_name in zip(tabs, MODELS.keys()):
-        with tab:
-            model = load_model(MODELS[model_name])
-            if model:
-                try:
-                    if model_name == "Cox PH":
-                        # Si c'est un modèle CoxPHFitter
-                        if isinstance(model, CoxPHFitter):
-                            # Assurez-vous que les colonnes du modèle et les données d'entrée sont les mêmes
-                            input_df = input_df[model.params_.index]  # Réorganise les colonnes en fonction du modèle
-                            prediction = model.predict_median(input_df)
-                            st.metric(label="Survie médiane estimée", value=f"{prediction.values[0]:.1f} mois")
-                    else:
-                        # Pour les autres modèles
-                        prediction = model.predict(input_df)[0]
-                        st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
-                    
-                    # Visualisation optionnelle : courbe de survie
-                    months = min(int(prediction), 120)
-                    fig = px.line(
-                        x=list(range(months)),
-                        y=[100 - (i / months) * 100 for i in range(months)],
-                        labels={"x": "Mois", "y": "Probabilité de survie (%)"},
-                        color_discrete_sequence=['#2ca02c']
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                except Exception as e:
-                    st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
+    if st.button("Prédire le temps de survie"):
+        # Vérifier que les données sont correctement encodées et complètes
+        if input_df.empty:
+            st.error("❌ Veuillez remplir tous les champs pour la prédiction.")
+            return
 
+        model = load_model(MODELS[model_choice])
+        if model:
+            try:
+                if model_choice == "Cox PH":
+                    # Si c'est un modèle CoxPHFitter
+                    if isinstance(model, CoxPHFitter):
+                        input_df = input_df[model.params_.index]  # Réorganise les colonnes en fonction du modèle
+                        prediction = model.predict_median(input_df)
+                        st.metric(label="Survie médiane estimée", value=f"{prediction.values[0]:.1f} mois")
+                else:
+                    # Pour les autres modèles
+                    prediction = model.predict(input_df)[0]
+                    st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
+                
+                # Visualisation optionnelle : courbe de survie
+                months = min(int(prediction), 120)
+                fig = px.line(
+                    x=list(range(months)),
+                    y=[100 - (i / months) * 100 for i in range(months)],
+                    labels={"x": "Mois", "y": "Probabilité de survie (%)"},
+                    color_discrete_sequence=['#2ca02c']
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            except Exception as e:
+                st.error(f"❌ Erreur de prédiction pour {model_choice} : {e}")
 
 def a_propos():
     """ Affichage de la section À Propos """
@@ -218,7 +171,6 @@ def contact():
 # ----------------------------------------------------------
 PAGES = {
     "🏠 Accueil": accueil,
-    "📊 Analyse": analyse_descriptive,
     "🤖 Prédiction": modelisation,
     "📚 À Propos": a_propos,
     "📩 Contact": contact
