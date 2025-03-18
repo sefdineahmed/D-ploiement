@@ -68,15 +68,14 @@ def load_model(model_path):
     try:
         # Correction spécifique pour le modèle RSF
         if model_path.endswith("rsf.joblib"):
-            import sklearn.utils.validation as sk_validation
-            if not hasattr(sk_validation, "validate_data"):
-                # Création d'un stub pour validate_data
-                def validate_data(X, y=None, *, reset=True, validate_separately=False, **kwargs):
-                    if y is None:
-                        return X
-                    return X, y
-                sk_validation.validate_data = validate_data
-
+            # Patch pour le problème de get_tags
+            try:
+                from sklearn.utils._tags import get_tags
+            except ImportError:
+                def get_tags(estimator):
+                    return {}
+                import sklearn.utils._tags as sk_tags
+                sk_tags.get_tags = get_tags
         if model_path.endswith(".keras"):
             return tf_load_model(model_path)  # Chargement des modèles Keras
         return joblib.load(model_path)  # Chargement des autres modèles
