@@ -5,27 +5,27 @@ import joblib
 import tensorflow as tf
 import plotly.express as px
 from PIL import Image
-import numpy as np
 
 # ----------------------------------------------------------
 # Patch pour les incompatibilités de versions
 # ----------------------------------------------------------
-# Pour trapz
+# Patch pour trapz (SciPy)
+import scipy.integrate as integrate
 try:
     from scipy.integrate import trapz
 except ImportError:
-    trapz = np.trapz  # utiliser numpy.trapz en repli
+    from numpy import trapz as np_trapz
+    integrate.trapz = np_trapz
 
-import scipy.integrate as integrate
-integrate.trapz = trapz
-
-# Pour validate_data
+# Patch pour validate_data (scikit-learn)
 try:
     from sklearn.utils.validation import validate_data
 except ImportError:
-    # Fonction de repli : retourne simplement le premier argument
-    def validate_data(X, *args, **kwargs):
-        return X
+    def validate_data(*args, **kwargs):
+        return
+
+# Import pour Kaplan-Meier
+from lifelines import KaplanMeierFitter
 
 # ----------------------------------------------------------
 # Configuration de l'application
@@ -159,6 +159,14 @@ def analyse_descriptive():
         selected_var = st.selectbox("Choisir une variable", df.columns)
         fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Histogramme de la distribution du traitement
+        if "Traitement" in df.columns:
+            st.subheader("📊 Distribution du Traitement")
+            fig2 = px.histogram(df, x="Traitement", color_discrete_sequence=['#ff7f0e'])
+            st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.warning("La colonne 'Traitement' n'est pas disponible dans les données.")
     
     with col2:
         st.subheader("🌡 Matrice de corrélation")
@@ -166,6 +174,19 @@ def analyse_descriptive():
         corr_matrix = numeric_df.corr()
         fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Courbe de survie Kaplan-Meier
+        if "temps" in df.columns and "event" in df.columns:
+            st.subheader("📉 Courbe de survie Kaplan-Meier")
+            kmf = KaplanMeierFitter()
+            kmf.fit(durations=df["temps"], event_observed=df["event"])
+            km_data = kmf.survival_function_.reset_index()
+            fig_km = px.line(km_data, x="index", y=km_data.columns[1],
+                             labels={"index": "Temps", km_data.columns[1]: "Survie"},
+                             title="Courbe de survie Kaplan-Meier")
+            st.plotly_chart(fig_km, use_container_width=True)
+        else:
+            st.warning("Les colonnes 'temps' et/ou 'event' ne sont pas disponibles pour le calcul de Kaplan-Meier.")
 
 def modelisation():
     st.title("🤖 Prédiction de Survie")
@@ -190,11 +211,11 @@ def modelisation():
             if model:
                 try:
                     prediction = model.predict(input_df)[0]
-                    # Convertir la prédiction en float au cas où c'est un tableau NumPy
-                    prediction = float(prediction.item() if hasattr(prediction, "item") else prediction)
-                    st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
+                    # Convertir la prédiction en float pour l'affichage
+                    prediction_val = float(prediction.item()) if hasattr(prediction, "item") else float(prediction)
+                    st.metric(label="Survie médiane estimée", value=f"{prediction_val:.1f} mois")
                     
-                    months = min(int(prediction), 120)
+                    months = min(int(prediction_val), 120)
                     fig = px.line(
                         x=list(range(months)),
                         y=[100 - (i / months) * 100 for i in range(months)],
