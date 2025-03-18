@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import tensorflow as tf
+import numpy as np
 import plotly.express as px
 from PIL import Image
 from lifelines import CoxPHFitter
@@ -61,24 +62,41 @@ def load_data():
 
 @st.cache_resource(show_spinner=False)
 def load_model(model_path):
-    """Charge un modèle en gérant les erreurs."""
+    """
+    Charge un modèle pré-entraîné.
+    Pour les modèles Keras (.keras) on utilise tf.keras.models.load_model avec les custom_objects.
+    Pour les autres modèles, on utilise joblib.load.
+    Pour le modèle RSF, on applique un monkey patch pour éviter l'erreur liée à get_tags.
+    """
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
         return None
+
     try:
-        # Correction spécifique pour le modèle RSF
-        if model_path.endswith("rsf.joblib"):
-            # Patch pour le problème de get_tags
+        _, ext = os.path.splitext(model_path)
+        # Correction spécifique pour RSF : patch pour get_tags si besoin
+        if "rsf" in model_path.lower():
             try:
                 from sklearn.utils._tags import get_tags
             except ImportError:
+                # Si get_tags n'existe pas, on définit un stub minimal
                 def get_tags(estimator):
                     return {}
                 import sklearn.utils._tags as sk_tags
                 sk_tags.get_tags = get_tags
-        if model_path.endswith(".keras"):
-            return tf_load_model(model_path)  # Chargement des modèles Keras
-        return joblib.load(model_path)  # Chargement des autres modèles
+
+        if ext in ['.keras', '.h5']:
+            # Pour les modèles Keras, on peut avoir besoin d'une fonction de perte personnalisée
+            # Ici, on définit une fonction cox_loss minimaliste si nécessaire
+            def cox_loss(y_true, y_pred):
+                event = tf.cast(y_true[:, 0], dtype=tf.float32)
+                risk = y_pred[:, 0]
+                log_risk = tf.math.log(tf.cumsum(tf.exp(risk), reverse=True))
+                loss = -tf.reduce_mean((risk - log_risk) * event)
+                return loss
+            return tf_load_model(model_path, custom_objects={"cox_loss": cox_loss})
+        else:
+            return joblib.load(model_path)
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du modèle : {e}")
         return None
@@ -89,6 +107,45 @@ def encode_features(inputs):
     Chaque entrée "Oui" devient 1, "Non" devient 0.
     """
     return pd.DataFrame({k: [1 if v.upper() == "OUI" else 0] for k, v in inputs.items()})
+
+def predict_survival(model, data, model_name):
+    """
+    Effectue la prédiction du temps de survie selon le type de modèle.
+    Pour CoxPHFitter, on utilise predict_median.
+    Pour les autres modèles, on suppose que la méthode predict retourne un array numpy.
+    """
+    # Cas pour CoxPHFitter (Cox PH)
+    if hasattr(model, "predict_median"):
+        pred = model.predict_median(data)
+        # Si la prédiction est une Series ou un DataFrame, on prend la première valeur
+        if hasattr(pred, '__iter__'):
+            return pred.iloc[0] if isinstance(pred, pd.Series) else pred[0]
+        return pred
+
+    # Cas pour RSF, GBST ou DeepSurv
+    elif hasattr(model, "predict"):
+        prediction = model.predict(data)
+        # Pour DeepSurv, la prédiction est souvent un tableau 2D
+        if isinstance(prediction, np.ndarray):
+            if prediction.ndim == 2:
+                return prediction[0][0]
+            return prediction[0]
+        return prediction
+    else:
+        raise ValueError(f"Le modèle {model_name} ne supporte pas la prédiction de survie.")
+
+def clean_prediction(prediction, model_name):
+    """
+    Nettoie la prédiction pour éviter les valeurs négatives et renvoie la valeur ajustée.
+    """
+    # Pour Cox PH et RSF, on retourne la valeur maximale entre la prédiction et 0
+    if model_name in ["Cox PH", "RSF", "GBST"]:
+        return max(prediction, 0)
+    # Pour DeepSurv, on s'assure que la prédiction est au moins 1 (par exemple 1 mois)
+    elif model_name == "DeepSurv":
+        return max(prediction, 1)
+    else:
+        return prediction
 
 # ----------------------------------------------------------
 # Définition des Pages
@@ -102,13 +159,15 @@ def accueil():
         st.title("⚕️ Plateforme d'Aide à la Décision")
         st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
     st.markdown("---")
-    st.write(""" 
+    st.write(
+        """
     ### Fonctionnalités principales :
     - 📊 Exploration interactive des données cliniques
     - 📈 Analyse statistique descriptive
     - 🤖 Prédiction multi-modèles de survie
     - 📤 Export des résultats cliniques
-    """)
+    """
+    )
 
 def analyse_descriptive():
     st.title("📊 Analyse Exploratoire")
@@ -131,7 +190,6 @@ def analyse_descriptive():
     
     with col2:
         st.subheader("🌡 Matrice de corrélation")
-        # Sélection uniquement des colonnes numériques
         numeric_df = df.select_dtypes(include=["number"])
         corr_matrix = numeric_df.corr()
         fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
@@ -150,41 +208,28 @@ def modelisation():
     input_df = encode_features(inputs)
     st.markdown("---")
     
-    # Vérifier si toutes les colonnes nécessaires sont présentes
+    # Vérifier que toutes les colonnes sont présentes
     missing_columns = [col for col in FEATURE_CONFIG.keys() if col not in input_df.columns]
     if missing_columns:
         st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
         return
     
-    # Menu déroulant pour choisir le modèle
     model_name = st.selectbox("Choisir un modèle", list(MODELS.keys()))
     model = load_model(MODELS[model_name])
     
-    # Bouton pour prédire le temps de survie
     if st.button("Prédire le temps de survie"):
         if model:
             try:
-                if model_name == "Cox PH":
-                    # Si c'est un modèle CoxPHFitter
-                    if hasattr(model, "params_"):
-                        cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
-                    else:
-                        cols_to_use = input_df.columns
-                    input_df = input_df[cols_to_use]  
-                    prediction = model.predict_median(input_df)
-                    # Gérer le cas où prediction est un scalaire ou une Series
-                    if hasattr(prediction, '__iter__'):
-                        pred_val = prediction.iloc[0] if isinstance(prediction, pd.Series) else prediction[0]
-                    else:
-                        pred_val = prediction
-                    st.metric(label="Survie médiane estimée", value=f"{pred_val:.1f} mois")
-                else:
-                    # Pour les autres modèles (RSF, DeepSurv, GBST)
-                    prediction = model.predict(input_df)[0]
-                    st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
+                # Pour le modèle Cox PH, s'assurer que les colonnes utilisées correspondent
+                if model_name == "Cox PH" and hasattr(model, "params_"):
+                    cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
+                    input_df = input_df[cols_to_use]
+                pred = predict_survival(model, input_df, model_name)
+                cleaned_pred = clean_prediction(pred, model_name)
+                st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
                 
                 # Visualisation optionnelle : courbe de survie
-                months = min(int(prediction) if not hasattr(prediction, '__iter__') else int(prediction[0]), 120)
+                months = min(int(cleaned_pred), 120)
                 fig = px.line(
                     x=list(range(months)),
                     y=[100 - (i / months) * 100 for i in range(months)],
@@ -196,15 +241,14 @@ def modelisation():
                 st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
 def a_propos():
-    """ Affichage de la section À Propos """
     st.title("📚 À Propos")
     cols = st.columns([1, 3])
     with cols[0]:
         if os.path.exists(TEAM_IMG_PATH):
             st.image(TEAM_IMG_PATH, width=150)
-    
     with cols[1]:
-        st.markdown(""" 
+        st.markdown(
+            """
         ### Équipe  
         - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences (UAD Bambey)  
         - **🎓 PhD. Idrissa Sy** - PhD en Statistiques (UAD Bambey)  
@@ -212,18 +256,21 @@ def a_propos():
 
         Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
         Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
-        """)
+        """
+        )
 
 def contact():
     st.title("📩 Contact")
-    st.markdown(""" 
+    st.markdown(
+        """
     #### Coordonnées
     **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
     
     **Téléphone**: +221 77 808 09 42
     
     **Email**: ahmed.sefdine@uadb.edu.sn
-    """)
+    """
+    )
     with st.form("contact_form"):
         name = st.text_input("Nom complet")
         email = st.text_input("Email")
@@ -243,7 +290,6 @@ PAGES = {
 }
 
 def main():
-    # Utilisation de st.tabs pour aligner les onglets en haut
     tabs = st.tabs(list(PAGES.keys()))
     for tab, (page_name, page_func) in zip(tabs, PAGES.items()):
         with tab:
