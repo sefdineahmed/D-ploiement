@@ -7,6 +7,24 @@ import plotly.express as px
 from PIL import Image
 
 # ----------------------------------------------------------
+# Patch pour les incompatibilités de versions
+# ----------------------------------------------------------
+# Patch pour trapz (SciPy)
+import scipy.integrate as integrate
+try:
+    from scipy.integrate import trapz
+except ImportError:
+    from numpy import trapz as np_trapz
+    integrate.trapz = np_trapz
+
+# Patch pour validate_data (scikit-learn)
+try:
+    from sklearn.utils.validation import validate_data
+except ImportError:
+    def validate_data(*args, **kwargs):
+        return
+
+# ----------------------------------------------------------
 # Configuration de l'application
 # ----------------------------------------------------------
 st.set_page_config(
@@ -29,8 +47,13 @@ MODELS = {
     "GBST": "models/gbst.joblib"
 }
 
-# Configuration des variables (catégorielles -> Oui/Non)
+# ----------------------------------------------------------
+# Configuration des variables
+# Nous ajoutons "Âge" pour satisfaire l'exigence du modèle DeepSurv (12 features)
+# Les autres variables restent catégorielles (Oui/Non)
+# ----------------------------------------------------------
 FEATURE_CONFIG = {
+    "Age": "Âge",
     "Cardiopathie": "Cardiopathie",
     "Ulceregastrique": "Ulcère gastrique",
     "Douleurepigastrique": "Douleur épigastrique",
@@ -45,7 +68,7 @@ FEATURE_CONFIG = {
 }
 
 # ----------------------------------------------------------
-# Définition de la fonction personnalisée pour DeepSurv
+# Fonction personnalisée pour DeepSurv
 # ----------------------------------------------------------
 @tf.keras.utils.register_keras_serializable()
 def cox_loss(y_true, y_pred):
@@ -83,10 +106,18 @@ def load_model(model_path):
 
 def encode_features(inputs):
     """
-    Encode les variables catégorielles en format numérique (0/1).
-    Chaque entrée "Oui" devient 1, "Non" devient 0.
+    Encode les variables en format numérique.
+    Pour les variables catégorielles : "Oui" devient 1, "Non" devient 0.
+    Pour les variables numériques, on conserve la valeur.
     """
-    return pd.DataFrame({k: [1 if v == "Oui" else 0] for k, v in inputs.items()})
+    encoded = {}
+    for key, value in inputs.items():
+        # Si la valeur est numérique, on la conserve
+        if isinstance(value, (int, float)):
+            encoded[key] = [value]
+        else:
+            encoded[key] = [1 if value == "Oui" else 0]
+    return pd.DataFrame(encoded)
 
 # ----------------------------------------------------------
 # Définition des Pages
@@ -137,16 +168,23 @@ def analyse_descriptive():
 def modelisation():
     st.title("🤖 Prédiction de Survie")
     
+    # Création du formulaire d'entrée
     with st.expander("📋 Paramètres du patient", expanded=True):
         inputs = {}
         cols = st.columns(3)
         for i, (feature, label) in enumerate(FEATURE_CONFIG.items()):
             with cols[i % 3]:
-                inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
+                # Pour la variable "Âge", on utilise un input numérique
+                if feature == "Age":
+                    inputs[feature] = st.number_input(label, min_value=0, max_value=120, value=50, step=1, key=feature)
+                else:
+                    inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
     
+    # Encodage des variables
     input_df = encode_features(inputs)
     st.markdown("---")
     
+    # Affichage des résultats dans des onglets alignés en haut
     tabs = st.tabs(list(MODELS.keys()))
     for tab, model_name in zip(tabs, MODELS.keys()):
         with tab:
