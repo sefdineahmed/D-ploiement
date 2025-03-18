@@ -176,7 +176,7 @@ def analyse_descriptive():
         st.plotly_chart(fig, use_container_width=True)
         
         # Courbe de survie Kaplan-Meier
-        if "temps" in df.columns and "event" in df.columns:
+        if "Tempsdesuivi (Mois)" in df.columns and "Deces" in df.columns:
             st.subheader("📉 Courbe de survie Kaplan-Meier")
             kmf = KaplanMeierFitter()
             kmf.fit(durations=df["Tempsdesuivi (Mois)"], event_observed=df["Deces"])
