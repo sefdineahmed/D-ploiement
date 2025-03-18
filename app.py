@@ -10,6 +10,21 @@ from lifelines import CoxPHFitter
 from tensorflow.keras.models import load_model as tf_load_model
 
 # ----------------------------------------------------------
+# Wrapper pour le modèle RSF afin d'ajouter l'attribut sklearn_tags
+# ----------------------------------------------------------
+class RSFWrapper:
+    def __init__(self, model):
+        self.model = model
+
+    def __getattr__(self, name):
+        return getattr(self.model, name)
+
+    @property
+    def sklearn_tags(self):
+        # Retourne un dictionnaire vide pour éviter l'erreur
+        return {}
+
+# ----------------------------------------------------------
 # Configuration de l'application
 # ----------------------------------------------------------
 st.set_page_config(
@@ -67,7 +82,7 @@ def load_model(model_path):
     Charge un modèle pré-entraîné.
     Pour les modèles Keras (.keras ou .h5) on utilise tf.keras.models.load_model.
     Pour les autres, joblib.load.
-    Pour le modèle RSF, on applique des correctifs pour éviter les erreurs liées aux attributs internes.
+    Pour le modèle RSF, on enveloppe le modèle dans RSFWrapper pour fournir l'attribut sklearn_tags.
     """
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
@@ -75,19 +90,6 @@ def load_model(model_path):
 
     try:
         _, ext = os.path.splitext(model_path)
-        # Correction spécifique pour RSF : patch sur _check_n_features
-        if "rsf" in model_path.lower():
-            try:
-                from sklearn.utils.validation import _check_n_features
-            except ImportError:
-                def _check_n_features(X, n_features):
-                    return X
-                try:
-                    import sklearn.utils.validation as sk_validation
-                    sk_validation._check_n_features = _check_n_features
-                except Exception:
-                    pass
-
         if ext in ['.keras', '.h5']:
             # Définition d'une fonction de perte custom si besoin (pour DeepSurv par exemple)
             def cox_loss(y_true, y_pred):
@@ -99,11 +101,9 @@ def load_model(model_path):
             return tf_load_model(model_path, custom_objects={"cox_loss": cox_loss})
         else:
             model = joblib.load(model_path)
-            # Correction pour RSF : s'assurer que l'attribut sklearn_tags est présent
+            # Si le modèle est RSF, on l'enveloppe dans RSFWrapper
             if "rsf" in model_path.lower():
-                if not hasattr(model, "sklearn_tags"):
-                    # On ajoute l'attribut sklearn_tags en tant que méthode retournant un dict vide
-                    model.sklearn_tags = lambda: {}
+                model = RSFWrapper(model)
             return model
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du modèle : {e}")
