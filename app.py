@@ -120,16 +120,17 @@ def predict_survival(model, data, model_name):
     """
     if hasattr(model, "predict_median"):
         pred = model.predict_median(data)
-        if hasattr(pred, '__iter__'):
-            return pred.iloc[0] if isinstance(pred, pd.Series) else pred[0]
-        return pred
+        # Calculer l'intervalle de confiance pour Cox PH ou RSF
+        if hasattr(pred, 'lower') and hasattr(pred, 'upper'):
+            return pred.iloc[0], pred.lower.iloc[0], pred.upper.iloc[0]
+        return pred.iloc[0], None, None
     elif hasattr(model, "predict"):
         prediction = model.predict(data)
         if isinstance(prediction, np.ndarray):
             if prediction.ndim == 2:
-                return prediction[0][0]
-            return prediction[0]
-        return prediction
+                return prediction[0][0], None, None
+            return prediction[0], None, None
+        return prediction, None, None
     else:
         raise ValueError(f"Le modèle {model_name} ne supporte pas la prédiction de survie.")
 
@@ -151,51 +152,6 @@ def clean_prediction(prediction, model_name):
 # ----------------------------------------------------------
 # Définition des Pages
 # ----------------------------------------------------------
-def accueil():
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        if os.path.exists(LOGO_PATH):
-            st.image(LOGO_PATH, width=200)
-    with col2:
-        st.title("⚕️ Plateforme d'Aide à la Décision")
-        st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
-    st.markdown("---")
-    st.write(
-        """
-    ### Fonctionnalités principales :
-    - 📊 Exploration interactive des données cliniques
-    - 📈 Analyse statistique descriptive
-    - 🤖 Prédiction multi-modèles de survie
-    - 📤 Export des résultats cliniques
-    """
-    )
-
-def analyse_descriptive():
-    st.title("📊 Analyse Exploratoire")
-    df = load_data()
-    if df.empty:
-        return
-
-    with st.expander("🔍 Aperçu des données brutes", expanded=True):
-        st.dataframe(df.head(5))
-        st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
-    
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📈 Distribution des variables")
-        selected_var = st.selectbox("Choisir une variable", df.columns)
-        fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        st.subheader("🌡 Matrice de corrélation")
-        numeric_df = df.select_dtypes(include=["number"])
-        corr_matrix = numeric_df.corr()
-        fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
-        st.plotly_chart(fig, use_container_width=True)
-
 def modelisation():
     st.title("🤖 Prédiction de Survie")
     
@@ -226,11 +182,14 @@ def modelisation():
                 if model_name == "Cox PH" and hasattr(model, "params_"):
                     cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
                     input_df = input_df[cols_to_use]
-                pred = predict_survival(model, input_df, model_name)
+                pred, lower, upper = predict_survival(model, input_df, model_name)
                 cleaned_pred = clean_prediction(pred, model_name)
                 if np.isnan(cleaned_pred):
                     raise ValueError("La prédiction renvoyée est NaN.")
+                
                 st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
+                if lower and upper:
+                    st.markdown(f"**Intervalle de confiance (95%)** : {lower:.1f} mois - {upper:.1f} mois")
                 
                 months = min(int(cleaned_pred), 120)
                 fig = px.line(
@@ -242,44 +201,6 @@ def modelisation():
                 st.plotly_chart(fig, use_container_width=True)
             except Exception as e:
                 st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
-
-def a_propos():
-    st.title("📚 À Propos")
-    cols = st.columns([1, 3])
-    with cols[0]:
-        if os.path.exists(TEAM_IMG_PATH):
-            st.image(TEAM_IMG_PATH, width=150)
-    with cols[1]:
-        st.markdown(
-            """
-        ### Équipe  
-        - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences (UAD Bambey)  
-        - **🎓 PhD. Idrissa Sy** - PhD en Statistiques (UAD Bambey)  
-        - **💻 M. Ahmed Sefdine** - Data Scientist  
-
-        Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
-        Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
-        """
-        )
-
-def contact():
-    st.title("📩 Contact")
-    st.markdown(
-        """
-    #### Coordonnées
-    **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
-    
-    **Téléphone**: +221 77 808 09 42
-    
-    **Email**: ahmed.sefdine@uadb.edu.sn
-    """
-    )
-    with st.form("contact_form"):
-        name = st.text_input("Nom complet")
-        email = st.text_input("Email")
-        message = st.text_area("Message")
-        if st.form_submit_button("Envoyer"):
-            st.success("✅ Message envoyé avec succès !")
 
 # ----------------------------------------------------------
 # Navigation Principale (Onglets en haut)
