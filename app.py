@@ -198,12 +198,6 @@ def footer():
     </div>
     """, unsafe_allow_html=True)
 
-# Ajouter l'appel au footer en bas de chaque page
-if menu == "Aide & Contact":
-    a_propos()
-
-footer()
-
 
 def contact():
     st.title("📩 Contact")
