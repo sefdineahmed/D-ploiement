@@ -168,10 +168,10 @@ def a_propos():
             st.image(TEAM_IMG_PATH)
     with cols[1]:
         st.markdown("""
-        ### Équipe Médicale
-        - **Dr. Alioune Diop** - Oncologue
-        - **Pr. Aminata Ndiaye** - Chirurgien Digestif
-        - **M. Jean Dupont** - Data Scientist
+        ### Équipe 
+        - **Pr. Aba Diop** - Maître de Conférences (UAD Bambey) 
+        - **PhD. Idrissa Sy** - PhD (UAD Bambey)  
+        - **M. Ahmed Sefdine D** - Data Scientist
         
         **Version**: 2.1.0  
         **Dernière mise à jour**: Juin 2024
@@ -182,8 +182,8 @@ def contact():
     st.markdown("""
     #### Coordonnées
     **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
-    **Téléphone**: +221 33 839 50 00  
-    **Email**: contact@oncosuite.sn
+    **Téléphone**: +221 77 808 09 42
+    **Email**: ahmed.sefdine@uadb.edu.sn
     """)
     with st.form("contact_form"):
         name = st.text_input("Nom complet")
