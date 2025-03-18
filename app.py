@@ -86,7 +86,7 @@ def accueil():
         if os.path.exists(LOGO_PATH):
             st.image(LOGO_PATH, width=200)
     with col2:
-        st.title("🩺 OncoSuite - Plateforme d'Aide à la Décision")
+        st.title("Plateforme d'Aide à la Décision")
         st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
     st.markdown("---")
     st.write("""
