@@ -16,18 +16,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Chargement des images
+# Chemins vers les ressources
+DATA_PATH = "data/GastricCancerData.xlsx"
 LOGO_PATH = "assets/header.jpg"
+TEAM_IMG_PATH = "assets/team.jpg"
 
-# Chargement des modèles et des données
+# Configuration des modèles (ajout du modèle DeepSurv)
 MODELS = {
     "Cox PH": "models/coxph.joblib",
     "RSF": "models/rsf.joblib",
+    "DeepSurv": "models/deepsurv.keras",
     "GBST": "models/gbst.joblib"
 }
 
-DATA_PATH = "data/GastricCancerData.xlsx"
-
+# Configuration des variables (catégorielles -> Oui/Non)
 FEATURE_CONFIG = {
     "Cardiopathie": "Cardiopathie",
     "Ulceregastrique": "Ulcère gastrique",
@@ -45,7 +47,7 @@ FEATURE_CONFIG = {
 # ----------------------------------------------------------
 # Fonctions Utilitaires
 # ----------------------------------------------------------
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def load_data():
     """Charge les données depuis le fichier Excel."""
     if os.path.exists(DATA_PATH):
@@ -54,7 +56,7 @@ def load_data():
         st.error(f"❌ Fichier introuvable : {DATA_PATH}")
         return pd.DataFrame()
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def load_model(model_path):
     """Charge un modèle en gérant les erreurs."""
     if not os.path.exists(model_path):
@@ -69,22 +71,23 @@ def load_model(model_path):
         return None
 
 def encode_features(inputs):
-    """Encode les entrées utilisateur sous format numérique."""
-    return pd.DataFrame({k: [1 if v == "OUI" else 0] for k, v in inputs.items()})
+    """
+    Encode les variables catégorielles en format numérique (0/1).
+    Chaque entrée "Oui" devient 1, "Non" devient 0.
+    """
+    return pd.DataFrame({k: [1 if v == "Oui" else 0] for k, v in inputs.items()})
 
 # ----------------------------------------------------------
-# Pages de l'application
+# Définition des Pages
 # ----------------------------------------------------------
 def accueil():
     col1, col2 = st.columns([1, 3])
     with col1:
-        st.image(LOGO_PATH, width=200)
+        if os.path.exists(LOGO_PATH):
+            st.image(LOGO_PATH, width=200)
     with col2:
         st.title("🩺 OncoSuite - Plateforme d'Aide à la Décision")
-        st.markdown("""
-        **Estimation du temps de survie post-traitement du cancer gastrique**
-        """)
-    
+        st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
     st.markdown("---")
     st.write("""
     ### Fonctionnalités principales :
@@ -99,71 +102,87 @@ def analyse_descriptive():
     df = load_data()
     if df.empty:
         return
-    
+
     with st.expander("🔍 Aperçu des données brutes", expanded=True):
         st.dataframe(df.head(10))
-        st.write(f"📌 Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
-
+        st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
+    
     st.markdown("---")
     col1, col2 = st.columns(2)
-    
     with col1:
         st.subheader("📈 Distribution des variables")
         selected_var = st.selectbox("Choisir une variable", df.columns)
         fig = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
         st.plotly_chart(fig, use_container_width=True)
-
     with col2:
         st.subheader("🌡 Matrice de corrélation")
         corr_matrix = df.corr()
-        fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r')
+        fig = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
         st.plotly_chart(fig, use_container_width=True)
 
 def modelisation():
     st.title("🤖 Prédiction de Survie")
-
+    
+    # Formulaire d'entrée pour les variables catégorielles
     with st.expander("📋 Paramètres du patient", expanded=True):
         inputs = {}
         cols = st.columns(3)
         for i, (feature, label) in enumerate(FEATURE_CONFIG.items()):
             with cols[i % 3]:
-                inputs[feature] = st.radio(label, ["Non", "Oui"], horizontal=True)
+                inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
     
+    # Encodage des variables (Oui -> 1, Non -> 0)
     input_df = encode_features(inputs)
-
+    
     st.markdown("---")
+    # Affichage des résultats dans des onglets alignés en haut
     tabs = st.tabs(list(MODELS.keys()))
-
     for tab, model_name in zip(tabs, MODELS.keys()):
         with tab:
             model = load_model(MODELS[model_name])
             if model:
                 try:
+                    # Prédiction : la fonction predict retourne un tableau, on récupère le premier élément
                     prediction = model.predict(input_df)[0]
-                    st.metric("📊 Survie médiane estimée", f"{prediction:.1f} mois")
+                    st.metric(label="Survie médiane estimée", value=f"{prediction:.1f} mois")
+                    
+                    # Optionnel : visualisation d'une courbe de survie
+                    months = min(int(prediction), 120)
+                    fig = px.line(
+                        x=list(range(months)),
+                        y=[100 - (i / months) * 100 for i in range(months)],
+                        labels={"x": "Mois", "y": "Probabilité de survie (%)"},
+                        color_discrete_sequence=['#2ca02c']
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
                 except Exception as e:
-                    st.error(f"❌ Erreur de prédiction : {e}")
+                    st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
 def a_propos():
     st.title("📚 À Propos")
-    st.markdown("""
-    ### Équipe Médicale
-    - **Dr. Alioune Diop** - Oncologue
-    - **Pr. Aminata Ndiaye** - Chirurgien Digestif
-    - **M. Jean Dupont** - Data Scientist
-    
-    **Version**: 2.1.0  
-    **Dernière mise à jour**: Juin 2024
-    """)
+    cols = st.columns([1, 3])
+    with cols[0]:
+        if os.path.exists(TEAM_IMG_PATH):
+            st.image(TEAM_IMG_PATH)
+    with cols[1]:
+        st.markdown("""
+        ### Équipe Médicale
+        - **Dr. Alioune Diop** - Oncologue
+        - **Pr. Aminata Ndiaye** - Chirurgien Digestif
+        - **M. Jean Dupont** - Data Scientist
+        
+        **Version**: 2.1.0  
+        **Dernière mise à jour**: Juin 2024
+        """)
 
 def contact():
     st.title("📩 Contact")
     st.markdown("""
-    **Adresse**: CHU de Dakar, Sénégal  
+    #### Coordonnées
+    **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
     **Téléphone**: +221 33 839 50 00  
     **Email**: contact@oncosuite.sn
     """)
-
     with st.form("contact_form"):
         name = st.text_input("Nom complet")
         email = st.text_input("Email")
@@ -172,7 +191,7 @@ def contact():
             st.success("✅ Message envoyé avec succès !")
 
 # ----------------------------------------------------------
-# Navigation avec onglets en haut
+# Navigation Principale (Onglets en haut)
 # ----------------------------------------------------------
 PAGES = {
     "🏠 Accueil": accueil,
@@ -183,11 +202,11 @@ PAGES = {
 }
 
 def main():
+    # Utilisation de st.tabs pour aligner les onglets en haut
     tabs = st.tabs(list(PAGES.keys()))
-
-    for tab, (page_name, page_function) in zip(tabs, PAGES.items()):
+    for tab, (page_name, page_func) in zip(tabs, PAGES.items()):
         with tab:
-            page_function()
+            page_func()
 
 if __name__ == "__main__":
     main()
