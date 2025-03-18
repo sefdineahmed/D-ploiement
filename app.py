@@ -198,6 +198,40 @@ def footer():
     </div>
     """, unsafe_allow_html=True)
 
+def a_propos():
+    # Section "À propos"
+    st.title("📚 À Propos")
+    cols = st.columns([1, 3])
+    
+    with cols[0]:
+        if os.path.exists(TEAM_IMG_PATH):
+            st.image(TEAM_IMG_PATH)
+    
+    with cols[1]:
+        st.markdown("""
+        ### Équipe 
+        - **Pr. Aba Diop** - Maître de Conférences (UAD Bambey) 
+        - **PhD. Idrissa Sy** - PhD (UAD Bambey)  
+        - **M. Ahmed Sefdine** - Data Scientist
+        
+        **Version**: 2.1.0  
+        **Dernière mise à jour**: Juin 2024
+        """)
+    
+    # Conteneur pour les liens sociaux
+    st.markdown("""
+    ### Liens Utiles
+    - [GitHub](https://github.com/username)  
+    - [LinkedIn](https://www.linkedin.com/in/username)  
+    - [X](https://twitter.com/username)  
+    
+    N'hésitez pas à consulter ces liens pour plus d'informations ou pour contribuer au projet.
+    """)
+
+# Appel de la fonction 'À propos' dans l'application Streamlit
+if __name__ == "__main__":
+    a_propos()
+
 
 def contact():
     st.title("📩 Contact")
