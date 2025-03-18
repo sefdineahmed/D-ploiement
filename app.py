@@ -160,7 +160,6 @@ def modelisation():
                 except Exception as e:
                     st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
-
 def a_propos():
     """ Affichage de la section À Propos """
     st.title("📚 À Propos")
@@ -181,29 +180,14 @@ def a_propos():
         Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
         """)
 
-def a_propos():
-    # Section "À propos"
-    st.title("📚 À Propos")
-    cols = st.columns([1, 3])
-    
-    with cols[0]:
-        if os.path.exists(TEAM_IMG_PATH):
-            st.image(TEAM_IMG_PATH)
-    
-    with cols[1]:
-        st.markdown("""
-        ### Équipe 
-        - **Pr. Aba Diop** - Maître de Conférences (UAD Bambey) 
-        - **PhD. Idrissa Sy** - PhD (UAD Bambey)  
-        - **M. Ahmed Sefdine** - Data Scientist
-        """)
-
-    
     # Conteneur pour les liens sociaux et copyright sur la même ligne
     st.markdown("""
     ---
     <div style="text-align: center; font-size: 14px;">
-        &copy; 2025 M. Ahmed Sefdine - Data Scientist. Tous droits réservés. 
+        &copy; 2025 M. Ahmed Sefdine - Data Scientist. Tous droits réservés.  
+        - [![GitHub](https://img.icons8.com/ios-filled/50/000000/github.png)](https://github.com/sefdineahmed) GitHub  
+        - [![LinkedIn](https://img.icons8.com/ios-filled/50/000000/linkedin.png)](https://www.linkedin.com/in/sefdineahmed) LinkedIn  
+        - [![Twitter](https://img.icons8.com/ios-filled/50/000000/twitter.png)](https://twitter.com/sefdineahmed) X (Twitter)
     </div>
     """, unsafe_allow_html=True)
 
@@ -213,9 +197,7 @@ def contact():
     st.markdown("""
     #### Coordonnées
     **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
-    
-    **Téléphone**: +221 77 808 09 42
-    
+    **Téléphone**: +221 77 808 09 42  
     **Email**: ahmed.sefdine@uadb.edu.sn
     """)
     with st.form("contact_form"):
