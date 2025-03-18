@@ -16,7 +16,7 @@ try:
         @property
         def sklearn_tags(self):
             return {}
-        BaseEstimator.sklelearn_tags = sklearn_tags
+        BaseEstimator.sklearn_tags = sklearn_tags
 except Exception as e:
     pass
 
@@ -44,6 +44,7 @@ MODELS = {
 }
 
 # Configuration des variables
+# Pour AGE, on souhaite conserver la valeur numérique, pour les autres, conversion Oui/Non
 FEATURE_CONFIG = {
     "AGE": "Âge",
     "Cardiopathie": "Cardiopathie",
@@ -73,7 +74,11 @@ def load_data():
 
 @st.cache_resource(show_spinner=False)
 def load_model(model_path):
-    """Charge un modèle pré-entraîné."""
+    """
+    Charge un modèle pré-entraîné.
+    Pour les modèles Keras (.keras ou .h5) on utilise tf.keras.models.load_model.
+    Pour les autres, joblib.load.
+    """
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
         return None
@@ -81,10 +86,11 @@ def load_model(model_path):
     try:
         _, ext = os.path.splitext(model_path)
         if ext in ['.keras', '.h5']:
+            # Fonction de perte custom pour DeepSurv (si nécessaire)
             def cox_loss(y_true, y_pred):
                 event = tf.cast(y_true[:, 0], dtype=tf.float32)
                 risk = y_pred[:, 0]
-                log_risk = tf.math.log(tf.cumsum(tf.exp(risk), reverse=True)
+                log_risk = tf.math.log(tf.cumsum(tf.exp(risk), reverse=True))
                 loss = -tf.reduce_mean((risk - log_risk) * event)
                 return loss
             return tf_load_model(model_path, custom_objects={"cox_loss": cox_loss})
@@ -95,7 +101,11 @@ def load_model(model_path):
         return None
 
 def encode_features(inputs):
-    """Encode les variables."""
+    """
+    Encode les variables.
+    Pour 'AGE', on conserve la valeur numérique.
+    Pour les autres, "OUI" devient 1 et toute autre valeur 0.
+    """
     encoded = {}
     for k, v in inputs.items():
         if k == "AGE":
@@ -105,54 +115,38 @@ def encode_features(inputs):
     return pd.DataFrame([encoded])
 
 def predict_survival(model, data, model_name):
-    """Effectue la prédiction avec intervalle de confiance."""
-    try:
-        if model_name == "Cox PH":
-            pred_df = model.predict_median(data, ci_alpha=0.05)
-            if isinstance(pred_df, pd.DataFrame):
-                return (
-                    pred_df.iloc[0]['0.5'],
-                    pred_df.iloc[0]['0.5_lower_ci'],
-                    pred_df.iloc[0]['0.5_upper_ci']
-                )
-            return pred_df.iloc[0], None, None
-        
-        elif model_name in ["RSF", "GBST"]:
-            try:
-                return (
-                    model.predict_quantile(data, 0.5)[0],
-                    model.predict_quantile(data, 0.025)[0],
-                    model.predict_quantile(data, 0.975)[0]
-                )
-            except AttributeError:
-                pred = model.predict_median(data)
-                return (pred[0], None, None) if isinstance(pred, (np.ndarray, pd.Series)) else (pred, None, None)
-        
-        elif model_name == "DeepSurv":
-            pred = model.predict(data)
-            if isinstance(pred, np.ndarray):
-                return (pred[0][0], None, None) if pred.ndim == 2 else (pred[0], None, None)
-            return (pred, None, None)
-        
-        else:
-            raise ValueError(f"Modèle {model_name} non reconnu")
-    
-    except Exception as e:
-        st.error(f"Erreur de prédiction: {str(e)}")
-        return None, None, None
+    """
+    Effectue la prédiction du temps de survie selon le type de modèle.
+    """
+    if hasattr(model, "predict_median"):
+        pred = model.predict_median(data)
+        if hasattr(pred, '__iter__'):
+            return pred.iloc[0] if isinstance(pred, pd.Series) else pred[0]
+        return pred
+    elif hasattr(model, "predict"):
+        prediction = model.predict(data)
+        if isinstance(prediction, np.ndarray):
+            if prediction.ndim == 2:
+                return prediction[0][0]
+            return prediction[0]
+        return prediction
+    else:
+        raise ValueError(f"Le modèle {model_name} ne supporte pas la prédiction de survie.")
 
 def clean_prediction(prediction, model_name):
-    """Nettoie les prédictions."""
+    """
+    Nettoie la prédiction pour éviter les valeurs négatives.
+    """
     try:
         pred_val = float(prediction)
     except Exception:
         pred_val = 0
-    
     if model_name in ["Cox PH", "RSF", "GBST"]:
         return max(pred_val, 0)
     elif model_name == "DeepSurv":
         return max(pred_val, 1)
-    return pred_val
+    else:
+        return pred_val
 
 # ----------------------------------------------------------
 # Définition des Pages
@@ -218,6 +212,11 @@ def modelisation():
     input_df = encode_features(inputs)
     st.markdown("---")
     
+    missing_columns = [col for col in FEATURE_CONFIG.keys() if col not in input_df.columns]
+    if missing_columns:
+        st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
+        return
+    
     model_name = st.selectbox("Choisir un modèle", list(MODELS.keys()))
     model = load_model(MODELS[model_name])
     
@@ -227,24 +226,13 @@ def modelisation():
                 if model_name == "Cox PH" and hasattr(model, "params_"):
                     cols_to_use = list(model.params_.index) if hasattr(model.params_.index, '__iter__') else input_df.columns
                     input_df = input_df[cols_to_use]
-                
-                pred_median, pred_lower, pred_upper = predict_survival(model, input_df, model_name)
-                
-                cleaned_median = clean_prediction(pred_median, model_name)
-                cleaned_lower = clean_prediction(pred_lower, model_name) if pred_lower is not None else None
-                cleaned_upper = clean_prediction(pred_upper, model_name) if pred_upper is not None else None
-
-                if np.isnan(cleaned_median):
+                pred = predict_survival(model, input_df, model_name)
+                cleaned_pred = clean_prediction(pred, model_name)
+                if np.isnan(cleaned_pred):
                     raise ValueError("La prédiction renvoyée est NaN.")
+                st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
                 
-                st.metric(label="Survie médiane estimée", value=f"{cleaned_median:.1f} mois")
-                
-                if cleaned_lower and cleaned_upper:
-                    st.success(f"Intervalle de confiance à 95% : {cleaned_lower:.1f} - {cleaned_upper:.1f} mois")
-                else:
-                    st.warning("Intervalle de confiance non disponible pour ce modèle")
-
-                months = min(int(cleaned_median), 120)
+                months = min(int(cleaned_pred), 120)
                 fig = px.line(
                     x=list(range(months)),
                     y=[100 - (i / months) * 100 for i in range(months)],
@@ -265,9 +253,9 @@ def a_propos():
         st.markdown(
             """
         ### Équipe  
-        - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences (UAD Bambey)  
-        - **🎓 PhD. Idrissa Sy** - PhD en Statistiques (UAD Bambey)  
-        - **💻 M. Ahmed Sefdine** - Data Scientist  
+        - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences à l'Universite Alioune diop de Bambey
+        - **🎓 PhD. Idrissa Sy** - Enseigant Chercheur à l'Universite Alioune diop de Bambey 
+        - **💻 M. Ahmed Sefdine** - Student à l'Universite Alioune diop de Bambey  
 
         Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
         Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
@@ -279,11 +267,12 @@ def contact():
     st.markdown(
         """
     #### Coordonnées
-    **Adresse**: CHU de Dakar, BP 7325 Dakar Étoile, Sénégal  
     
-    **Téléphone**: +221 77 808 09 42
+    🌍Localisation: Bambey, BP 13, Sénégal
     
-    **Email**: ahmed.sefdine@uadb.edu.sn
+    📞 Telephone : +221 77 808 09 42
+    
+    📩 E-mail: ahmed.sefdine@uadb.edu.sn
     """
     )
     with st.form("contact_form"):
@@ -294,7 +283,7 @@ def contact():
             st.success("✅ Message envoyé avec succès !")
 
 # ----------------------------------------------------------
-# Navigation Principale
+# Navigation Principale (Onglets en haut)
 # ----------------------------------------------------------
 PAGES = {
     "🏠 Accueil": accueil,
