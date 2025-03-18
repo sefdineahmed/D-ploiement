@@ -67,7 +67,7 @@ def load_model(model_path):
     Charge un modèle pré-entraîné.
     Pour les modèles Keras (.keras ou .h5) on utilise tf.keras.models.load_model.
     Pour les autres, joblib.load.
-    Pour le modèle RSF, on applique un monkey patch sur _check_n_features si nécessaire.
+    Pour le modèle RSF, on applique des correctifs pour éviter les erreurs liées aux attributs internes.
     """
     if not os.path.exists(model_path):
         st.error(f"❌ Modèle introuvable : {model_path}")
@@ -80,7 +80,6 @@ def load_model(model_path):
             try:
                 from sklearn.utils.validation import _check_n_features
             except ImportError:
-                # Définition d'un stub minimal pour _check_n_features
                 def _check_n_features(X, n_features):
                     return X
                 try:
@@ -99,7 +98,13 @@ def load_model(model_path):
                 return loss
             return tf_load_model(model_path, custom_objects={"cox_loss": cox_loss})
         else:
-            return joblib.load(model_path)
+            model = joblib.load(model_path)
+            # Correction pour RSF : s'assurer que l'attribut sklearn_tags est présent
+            if "rsf" in model_path.lower():
+                if not hasattr(model, "sklearn_tags"):
+                    # On ajoute l'attribut sklearn_tags en tant que méthode retournant un dict vide
+                    model.sklearn_tags = lambda: {}
+            return model
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du modèle : {e}")
         return None
