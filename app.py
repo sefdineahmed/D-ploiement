@@ -24,7 +24,7 @@ except Exception as e:
 # Configuration de l'application
 # ----------------------------------------------------------
 st.set_page_config(
-    page_title="OncoSuite - Cancer Gastrique",
+    page_title="Cancer Gastrique",
     page_icon="⚕️",
     layout="wide",
     initial_sidebar_state="expanded"
