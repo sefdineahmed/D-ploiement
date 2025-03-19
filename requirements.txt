@@ -20,3 +20,4 @@ lifelines
 openpyxl
 scikit-learn
 scikit-survival
+plotly
