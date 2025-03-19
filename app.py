@@ -31,7 +31,7 @@ st.set_page_config(
 )
 
 # Chemins vers les ressources
-DATA_PATH = "data/GastricCancerData.xlsx"
+DATA_PATH = "data/data.xlsx"
 LOGO_PATH = "assets/header.jpg"
 TEAM_IMG_PATH = "assets/team.jpg"
 
