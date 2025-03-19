@@ -148,6 +148,20 @@ def clean_prediction(prediction, model_name):
     else:
         return pred_val
 
+def save_new_patient(new_patient_data):
+    """
+    Enregistre les informations d'un nouveau patient dans le fichier Excel.
+    """
+    df = load_data()
+    # Ajouter la nouvelle ligne
+    df = df.append(new_patient_data, ignore_index=True)
+    # Sauvegarder le DataFrame mis à jour
+    try:
+        df.to_excel(DATA_PATH, index=False)
+        st.success("Les informations du nouveau patient ont été enregistrées.")
+    except Exception as e:
+        st.error(f"Erreur lors de l'enregistrement des données : {e}")
+
 # ----------------------------------------------------------
 # Définition des Pages
 # ----------------------------------------------------------
@@ -162,12 +176,12 @@ def accueil():
     st.markdown("---")
     st.write(
         """
-    ### Fonctionnalités principales :
-    - 📊 Exploration interactive des données cliniques
-    - 📈 Analyse statistique descriptive
-    - 🤖 Prédiction multi-modèles de survie
-    - 📤 Export des résultats cliniques
-    """
+        ### Fonctionnalités principales :
+        - 📊 Exploration interactive des données cliniques
+        - 📈 Analyse statistique descriptive
+        - 🤖 Prédiction multi-modèles de survie
+        - 📤 Export des résultats cliniques
+        """
     )
 
 def analyse_descriptive():
@@ -199,6 +213,7 @@ def analyse_descriptive():
 def modelisation():
     st.title("🤖 Prédiction de Survie")
     
+    # Saisie des informations du patient
     with st.expander("📋 Paramètres du patient", expanded=True):
         inputs = {}
         cols = st.columns(3)
@@ -217,6 +232,7 @@ def modelisation():
         st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
         return
     
+    # Choix du modèle pour la prédiction
     model_name = st.selectbox("Choisir un modèle", list(MODELS.keys()))
     model = load_model(MODELS[model_name])
     
@@ -243,6 +259,12 @@ def modelisation():
             except Exception as e:
                 st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
+    st.markdown("---")
+    # Bouton pour enregistrer les informations du patient dans la base de données
+    if st.button("Enregistrer le patient"):
+        # On enregistre les données telles quelles, en utilisant le format dict obtenu
+        save_new_patient(input_df.iloc[0].to_dict())
+
 def a_propos():
     st.title("📚 À Propos")
     cols = st.columns([1, 3])
@@ -252,28 +274,28 @@ def a_propos():
     with cols[1]:
         st.markdown(
             """
-        ### Équipe  
-        - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences à l'Universite Alioune diop de Bambey
-        - **🎓 PhD. Idrissa Sy** - Enseigant Chercheur à l'Universite Alioune diop de Bambey 
-        - **💻 M. Ahmed Sefdine** - Student à l'Universite Alioune diop de Bambey  
+            ### Équipe  
+            - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences à l'Universite Alioune diop de Bambey
+            - **🎓 PhD. Idrissa Sy** - Enseignant Chercheur à l'Universite Alioune diop de Bambey 
+            - **💻 M. Ahmed Sefdine** - Student à l'Universite Alioune diop de Bambey  
 
-        Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
-        Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
-        """
+            Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
+            Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
+            """
         )
 
 def contact():
     st.title("📩 Contact")
     st.markdown(
         """
-    #### Coordonnées
-    
-    🌍Localisation: Bambey, BP 13, Sénégal
-    
-    📞 Telephone : +221 77 808 09 42
-    
-    📩 E-mail: ahmed.sefdine@uadb.edu.sn
-    """
+        #### Coordonnées
+        
+        🌍 Localisation : Bambey, BP 13, Sénégal
+        
+        📞 Téléphone : +221 77 808 09 42
+        
+        📩 E-mail : ahmed.sefdine@uadb.edu.sn
+        """
     )
     with st.form("contact_form"):
         name = st.text_input("Nom complet")
