@@ -153,10 +153,10 @@ def save_new_patient(new_patient_data):
     Enregistre les informations d'un nouveau patient dans le fichier Excel.
     """
     df = load_data()
-    # Créer un DataFrame temporaire à partir des nouvelles données
-    new_row = pd.DataFrame([new_patient_data])
-    # Concaténer le DataFrame existant et le nouveau
-    df = pd.concat([df, new_row], ignore_index=True)
+    # Créer un DataFrame à partir des données du nouveau patient
+    new_df = pd.DataFrame([new_patient_data])
+    # Utiliser pd.concat pour combiner les DataFrames
+    df = pd.concat([df, new_df], ignore_index=True)
     # Sauvegarder le DataFrame mis à jour
     try:
         df.to_excel(DATA_PATH, index=False)
@@ -317,6 +317,19 @@ PAGES = {
 }
 
 def main():
+    # Ajout d'un style CSS pour aligner les onglets à droite
+    st.markdown(
+        """
+        <style>
+        /* Ajuster l'alignement des onglets vers la droite */
+        .stTabs [data-baseweb="tab"] {
+            justify-content: flex-end;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     tabs = st.tabs(list(PAGES.keys()))
     for tab, (page_name, page_func) in zip(tabs, PAGES.items()):
         with tab:
