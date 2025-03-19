@@ -161,6 +161,8 @@ def save_new_patient(new_patient_data):
     try:
         df.to_excel(DATA_PATH, index=False)
         st.success("Les informations du nouveau patient ont été enregistrées.")
+        # Effacer le cache pour que load_data recharge le fichier mis à jour
+        load_data.clear()
     except Exception as e:
         st.error(f"Erreur lors de l'enregistrement des données : {e}")
 
