@@ -153,8 +153,10 @@ def save_new_patient(new_patient_data):
     Enregistre les informations d'un nouveau patient dans le fichier Excel.
     """
     df = load_data()
-    # Ajouter la nouvelle ligne
-    df = df.append(new_patient_data, ignore_index=True)
+    # Créer un DataFrame temporaire à partir des nouvelles données
+    new_row = pd.DataFrame([new_patient_data])
+    # Concaténer le DataFrame existant et le nouveau
+    df = pd.concat([df, new_row], ignore_index=True)
     # Sauvegarder le DataFrame mis à jour
     try:
         df.to_excel(DATA_PATH, index=False)
@@ -262,7 +264,6 @@ def modelisation():
     st.markdown("---")
     # Bouton pour enregistrer les informations du patient dans la base de données
     if st.button("Enregistrer le patient"):
-        # On enregistre les données telles quelles, en utilisant le format dict obtenu
         save_new_patient(input_df.iloc[0].to_dict())
 
 def a_propos():
