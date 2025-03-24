@@ -60,6 +60,32 @@ FEATURE_CONFIG = {
     "Adenopathie": "Adénopathie",
 }
 
+
+# Définition des chemins d'images
+TEAM_MEMBERS = [
+    {
+        "name": "Pr. Aba Diop",
+        "role": "Maître de Conférences",
+        "email": "aba.diop@example.com",
+        "linkedin": "https://linkedin.com/in/abadiop",
+        "photo": "assets/abadiop.jpeg"  # Remplacez par le vrai chemin
+    },
+    {
+        "name": "PhD. Idrissa Sy",
+        "role": "Enseignant Chercheur",
+        "email": "idrissa.sy@example.com",
+        "linkedin": "https://linkedin.com/in/idrissasy",
+        "photo": "assets/idrissasy.jpeg"  # Remplacez par le vrai chemin
+    },
+    {
+        "name": "M. Ahmed Sefdine",
+        "role": "Étudiant",
+        "email": "ahmed.sefdine@example.com",
+        "linkedin": "https://linkedin.com/in/sefdineahmed",
+        "photo": "assets/sefdine.jpg"  # Remplacez par le vrai chemin
+    }
+]
+
 # ----------------------------------------------------------
 # Fonctions Utilitaires
 # ----------------------------------------------------------
@@ -270,22 +296,34 @@ def modelisation():
 
 def a_propos():
     st.title("📚 À Propos")
-    cols = st.columns([1, 3])
-    with cols[0]:
-        if os.path.exists(TEAM_IMG_PATH):
-            st.image(TEAM_IMG_PATH, width=150)
-    with cols[1]:
-        st.markdown(
-            """
-            ### Équipe  
-            - **👨‍🏫 Pr. Aba Diop** - Maître de Conférences à l'Universite Alioune diop de Bambey
-            - **🎓 PhD. Idrissa Sy** - Enseignant Chercheur à l'Universite Alioune diop de Bambey 
-            - **💻 M. Ahmed Sefdine** - Student à l'Universite Alioune diop de Bambey  
 
-            Ce projet est développé dans le cadre d'une **recherche clinique** sur le cancer de l'estomac.  
-            Il permet de prédire le **temps de survie des patients** après leur traitement, en utilisant des modèles avancés de survie.  
-            """
-        )
+    # Affichage de l'image du cancer
+    st.image(TEAM_IMG_PATH, caption="Cancer de l'estomac", use_column_width=True)
+
+    # Description générale
+    st.markdown(
+        """
+        ## 🌍 À Propos du Projet  
+        Ce projet est une recherche clinique visant à **prédire le temps de survie** des patients atteints du cancer de l'estomac après leur traitement.  
+        Il utilise des modèles statistiques avancés pour fournir des **estimations précises et adaptées** à chaque patient.
+        
+        ### 🔬 Symptômes et Traitements  
+        - **Symptômes** : Douleurs abdominales, perte de poids, fatigue, vomissements, etc.  
+        - **Traitements** : Chirurgie, chimiothérapie, radiothérapie et thérapies ciblées.  
+        """
+    )
+
+    # Présentation de l'équipe
+    st.markdown("## 👥 Équipe de Recherche")
+    cols = st.columns(3)
+
+    for i, member in enumerate(TEAM_MEMBERS):
+        with cols[i]:
+            if os.path.exists(member["photo"]):
+                st.image(member["photo"], width=100)
+            st.markdown(f"**{member['name']}**  \n*{member['role']}*")
+            st.markdown(f"[📧 Email]({member['email']})")
+            st.markdown(f"[🔗 LinkedIn]({member['linkedin']})")
 
 def contact():
     st.title("📩 Contact")
