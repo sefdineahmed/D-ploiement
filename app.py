@@ -295,7 +295,13 @@ def modelisation():
         save_new_patient(input_df.iloc[0].to_dict())
 
 def a_propos():
-    st.title("📚 À Propos")
+    st.title("📚 À Propos du Projet ")
+    st.markdown(
+        """ 
+        Ce projet est une recherche clinique visant à **prédire le temps de survie** des patients atteints du cancer de l'estomac après leur traitement.  
+        Il utilise des modèles statistiques avancés pour fournir des **estimations précises et adaptées** à chaque patient.
+        """
+        )
 
     # Affichage de l'image du cancer
     st.image(TEAM_IMG_PATH, caption="Cancer de l'estomac", use_column_width=True)
