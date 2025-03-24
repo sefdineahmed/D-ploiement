@@ -303,7 +303,6 @@ def a_propos():
         """
     )
     st.image(TEAM_IMG_PATH, width=1000)
-)
 
     # Transmission de la bactérie
     st.title("🦠 Transmission")
