@@ -295,65 +295,84 @@ def modelisation():
         save_new_patient(input_df.iloc[0].to_dict())
 
 def a_propos():
-    # Causes et transmission
-    st.title("📚 Causes et Transmission au Sénégal")
+    # Causes de l'infection
+    st.title("📚 Quelles sont les causes ?")
     st.markdown(
         """
-        **Causes :**
-        - L'infection par *Helicobacter pylori* constitue le principal facteur de risque du cancer gastrique.
-        - Au Sénégal, l'infection se contracte généralement dès l’enfance et peut persister si elle n'est pas traitée, entraînant une inflammation chronique.
-
-        **Transmission :**
-        - La bactérie se transmet par voie orale (salive et liquides corporels), souvent via une transmission intra-familiale.
-        - Des conditions comme un assainissement insuffisant et la promiscuité, fréquents dans certaines régions sénégalaises, favorisent sa propagation.
+        L'infection par la bactérie *H. pylori* est un facteur majeur dans le développement des maladies gastriques, notamment le cancer de l'estomac. Contractée généralement pendant l'enfance, l'infection peut persister toute la vie sans traitement, entraînant une inflammation chronique et des lésions précancéreuses. Au Sénégal, où les conditions socio-économiques et l'accès à un assainissement optimal peuvent être limités, le risque d'infection demeure élevé.
         """
     )
     st.image(TEAM_IMG_PATH, use_container_width=True)
-    
-    # Symptômes et évolution de la maladie
-    st.title("Symptômes et Évolution")
+
+    # Transmission de la bactérie
+    st.title("🦠 Transmission")
     st.markdown(
         """
-        **Symptômes :**
-        - Douleurs abdominales, nausées, vomissements et perte de poids.
-        - Dans certains cas, des saignements digestifs peuvent survenir.
-
-        **Évolution :**
-        - La gastrite chronique liée à *H. pylori* reste souvent asymptomatique.
-        - Environ 10 % des personnes infectées développeront des ulcères et, dans 1 % des cas, une évolution vers un cancer gastrique.
+        *H. pylori* se transmet principalement par voie orale (salive et liquides corporels). La transmission intra-familiale est fréquente, surtout en milieu où les conditions d'hygiène sont difficiles à maintenir, comme c'est souvent le cas dans certaines régions du Sénégal. L'infection est surtout contractée durant la petite enfance, et le risque diminue après 10 ans.
         """
     )
 
-    # Diagnostic et traitements
-    st.title("Diagnostic et Traitements")
+    # Symptômes
+    st.title("⚠️ Symptômes")
     st.markdown(
         """
-        **Diagnostic :**
-        - Des tests invasifs (biopsies pour examen histologique, culture bactérienne et tests moléculaires) et non invasifs (test respiratoire, sérologie, détection d'antigènes dans les selles) sont utilisés.
-        - Au Sénégal, l'accès à ces technologies peut être variable, compliquant parfois le diagnostic précoce.
-
-        **Traitements :**
-        - La trithérapie (IPP + deux antibiotiques) sur 7 jours permet d'éradiquer la bactérie dans 70 % des cas.
-        - En cas d’échec, un traitement de deuxième ligne ou une quadrithérapie (Pylera) est envisagé pour atteindre jusqu'à 95 % d’efficacité.
-        - La résistance aux antibiotiques reste un défi majeur.
+        Les infections à *H. pylori* peuvent provoquer :
+        - Des douleurs abdominales et une sensation de brûlure.
+        - Des nausées et des vomissements.
+        - Une perte de poids inexpliquée.
+        
+        Dans le cas du cancer gastrique, les signes sont plus subtils et incluent souvent une indigestion persistante. Un diagnostic précoce est primordial, notamment au Sénégal, pour adapter rapidement la prise en charge.
         """
     )
 
-    # Prévention et impact
-    st.title("Prévention et Impact au Sénégal")
+    # Diagnostic
+    st.title("🔬 Diagnostic")
     st.markdown(
         """
-        **Prévention :**
-        - Améliorer les conditions d'hygiène (accès à une eau potable de qualité et assainissement des milieux de vie).
-        - Promouvoir l'éducation sanitaire pour limiter la transmission.
-        - Encourager un mode de vie sain (arrêt du tabac, consommation modérée d'alcool, alimentation riche en fruits et légumes).
-
-        **Impact :**
-        - L’infection à *H. pylori* est répandue dans les pays en voie de développement, y compris au Sénégal.
-        - Des stratégies de santé publique adaptées sont essentielles pour réduire le fardeau du cancer gastrique dans ces régions.
+        Le diagnostic repose sur deux approches :
+        
+        **Tests invasifs :**
+        - Biopsies avec examen histologique.
+        - Culture bactérienne et tests moléculaires.
+        
+        **Tests non invasifs :**
+        - Test respiratoire.
+        - Sérologie et détection d'antigènes dans les selles.
+        
+        Ces méthodes sont adaptées en fonction des ressources disponibles, y compris dans le contexte sénégalais.
         """
     )
 
+    # Traitements
+    st.title("💊 Traitements")
+    st.markdown(
+        """
+        Le traitement standard consiste en une trithérapie de 7 jours associant :
+        - Un inhibiteur de la pompe à protons (IPP).
+        - Deux antibiotiques (par exemple, amoxicilline, clarithromycine ou métronidazole).
+        
+        En cas d'échec, une quadrithérapie (souvent appelée Pylera) peut être proposée. Au Sénégal, la résistance aux antibiotiques est un défi majeur, d'où l'importance d'adapter les protocoles thérapeutiques aux réalités locales.
+        """
+    )
+
+    # Prévention
+    st.title("🛡️ Prévention")
+    st.markdown(
+        """
+        Pour prévenir l'infection et ses complications :
+        - Adopter une hygiène de vie saine : ne pas fumer, consommer l'alcool avec modération.
+        - Boire suffisamment d'eau et privilégier les aliments frais (fruits et légumes).
+        - Améliorer l'assainissement et l'accès à l'eau potable, un enjeu crucial au Sénégal.
+        """
+    )
+
+    # Population touchée
+    st.title("👥 Qui est touché ?")
+    st.markdown(
+        """
+        *H. pylori* est une infection répandue dans le monde, touchant entre 20 % et 90 % des adultes selon les régions. Au Sénégal, la prévalence est particulièrement élevée en raison des conditions sanitaires et socio-économiques. La détection précoce et un traitement approprié restent essentiels pour réduire le risque de complications graves, notamment les ulcères et le cancer gastrique.
+        """
+    )
 
     # Présentation de l'équipe
     st.markdown("## 👥 Équipe de Recherche")
