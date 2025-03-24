@@ -295,25 +295,65 @@ def modelisation():
         save_new_patient(input_df.iloc[0].to_dict())
 
 def a_propos():
-    st.title("📚 À Propos du Projet ")
-    st.markdown(
-        """ 
-        Ce projet est une recherche clinique visant à **prédire le temps de survie** des patients atteints du cancer de l'estomac après leur traitement.  
-        Il utilise des modèles statistiques avancés pour fournir des **estimations précises et adaptées** à chaque patient.
-        """
-        )
-
-    # Affichage de l'image du cancer
-    st.image(TEAM_IMG_PATH, use_column_width=True)
-
-    # Description générale
+    # Causes et transmission
+    st.title("📚 Causes et Transmission au Sénégal")
     st.markdown(
         """
-        ### 🔬 Symptômes et Traitements  
-        - **Symptômes** : Douleurs abdominales, perte de poids, fatigue, vomissements, etc.  
-        - **Traitements** : Chirurgie, chimiothérapie, radiothérapie et thérapies ciblées.  
+        **Causes :**
+        - L'infection par *Helicobacter pylori* constitue le principal facteur de risque du cancer gastrique.
+        - Au Sénégal, l'infection se contracte généralement dès l’enfance et peut persister si elle n'est pas traitée, entraînant une inflammation chronique.
+
+        **Transmission :**
+        - La bactérie se transmet par voie orale (salive et liquides corporels), souvent via une transmission intra-familiale.
+        - Des conditions comme un assainissement insuffisant et la promiscuité, fréquents dans certaines régions sénégalaises, favorisent sa propagation.
         """
     )
+    st.image(TEAM_IMG_PATH, use_container_width=True)
+    
+    # Symptômes et évolution de la maladie
+    st.title("Symptômes et Évolution")
+    st.markdown(
+        """
+        **Symptômes :**
+        - Douleurs abdominales, nausées, vomissements et perte de poids.
+        - Dans certains cas, des saignements digestifs peuvent survenir.
+
+        **Évolution :**
+        - La gastrite chronique liée à *H. pylori* reste souvent asymptomatique.
+        - Environ 10 % des personnes infectées développeront des ulcères et, dans 1 % des cas, une évolution vers un cancer gastrique.
+        """
+    )
+
+    # Diagnostic et traitements
+    st.title("Diagnostic et Traitements")
+    st.markdown(
+        """
+        **Diagnostic :**
+        - Des tests invasifs (biopsies pour examen histologique, culture bactérienne et tests moléculaires) et non invasifs (test respiratoire, sérologie, détection d'antigènes dans les selles) sont utilisés.
+        - Au Sénégal, l'accès à ces technologies peut être variable, compliquant parfois le diagnostic précoce.
+
+        **Traitements :**
+        - La trithérapie (IPP + deux antibiotiques) sur 7 jours permet d'éradiquer la bactérie dans 70 % des cas.
+        - En cas d’échec, un traitement de deuxième ligne ou une quadrithérapie (Pylera) est envisagé pour atteindre jusqu'à 95 % d’efficacité.
+        - La résistance aux antibiotiques reste un défi majeur.
+        """
+    )
+
+    # Prévention et impact
+    st.title("Prévention et Impact au Sénégal")
+    st.markdown(
+        """
+        **Prévention :**
+        - Améliorer les conditions d'hygiène (accès à une eau potable de qualité et assainissement des milieux de vie).
+        - Promouvoir l'éducation sanitaire pour limiter la transmission.
+        - Encourager un mode de vie sain (arrêt du tabac, consommation modérée d'alcool, alimentation riche en fruits et légumes).
+
+        **Impact :**
+        - L’infection à *H. pylori* est répandue dans les pays en voie de développement, y compris au Sénégal.
+        - Des stratégies de santé publique adaptées sont essentielles pour réduire le fardeau du cancer gastrique dans ces régions.
+        """
+    )
+
 
     # Présentation de l'équipe
     st.markdown("## 👥 Équipe de Recherche")
