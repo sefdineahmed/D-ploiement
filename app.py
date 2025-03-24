@@ -33,7 +33,7 @@ st.set_page_config(
 # Chemins vers les ressources
 DATA_PATH = "data/data.xlsx"
 LOGO_PATH = "assets/header.jpg"
-TEAM_IMG_PATH = "assets/team.jpg"
+TEAM_IMG_PATH = "assets/cancer-estomac.avif"
 
 # Configuration des modèles
 MODELS = {
@@ -82,7 +82,7 @@ TEAM_MEMBERS = [
         "role": "Étudiant",
         "email": "ahmed.sefdine@example.com",
         "linkedin": "https://linkedin.com/in/sefdineahmed",
-        "photo": "assets/sefdine.jpg"  # Remplacez par le vrai chemin
+        "photo": "assets/sefdine.jpeg"  # Remplacez par le vrai chemin
     }
 ]
 
