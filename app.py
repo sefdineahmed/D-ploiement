@@ -302,7 +302,7 @@ def a_propos():
         L'infection par la bactérie *H. pylori* est un facteur majeur dans le développement des maladies gastriques, notamment le cancer de l'estomac. Contractée généralement pendant l'enfance, l'infection peut persister toute la vie sans traitement, entraînant une inflammation chronique et des lésions précancéreuses. Au Sénégal, où les conditions socio-économiques et l'accès à un assainissement optimal peuvent être limités, le risque d'infection demeure élevé.
         """
     )
-    st.image(TEAM_IMG_PATH,caption="Cancer Gastrique", width=200)
+    st.image(TEAM_IMG_PATH, width=200)
 )
 
     # Transmission de la bactérie
