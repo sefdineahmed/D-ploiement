@@ -24,7 +24,7 @@ except Exception as e:
 # Configuration de l'application
 # ----------------------------------------------------------
 st.set_page_config(
-    page_title="OncoSuite - Cancer Gastrique",
+    page_title="MOYO",
     page_icon="⚕️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -33,7 +33,7 @@ st.set_page_config(
 # Chemins vers les ressources
 DATA_PATH = "data/data.xlsx"
 LOGO_PATH = "assets/header.jpg"
-TEAM_IMG_PATH = "assets/cancer-estomac.avif"
+TEAM_IMG_PATH = "assets/img0.jpeg"
 
 # Configuration des modèles
 MODELS = {
