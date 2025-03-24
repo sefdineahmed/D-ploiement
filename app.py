@@ -304,15 +304,11 @@ def a_propos():
         )
 
     # Affichage de l'image du cancer
-    st.image(TEAM_IMG_PATH, caption="Cancer de l'estomac", use_column_width=True)
+    st.image(TEAM_IMG_PATH, use_column_width=True)
 
     # Description générale
     st.markdown(
         """
-        ## 🌍 À Propos du Projet  
-        Ce projet est une recherche clinique visant à **prédire le temps de survie** des patients atteints du cancer de l'estomac après leur traitement.  
-        Il utilise des modèles statistiques avancés pour fournir des **estimations précises et adaptées** à chaque patient.
-        
         ### 🔬 Symptômes et Traitements  
         - **Symptômes** : Douleurs abdominales, perte de poids, fatigue, vomissements, etc.  
         - **Traitements** : Chirurgie, chimiothérapie, radiothérapie et thérapies ciblées.  
