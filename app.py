@@ -404,6 +404,7 @@ def a_propos():
     with col1:
         st.markdown("""
         L'infection par la bactérie *H. pylori* est un facteur majeur dans le développement des maladies gastriques. 
+        
         **Principaux facteurs de risque au Sénégal :**
         - Conditions socio-économiques difficiles
         - Accès limité à l'eau potable
