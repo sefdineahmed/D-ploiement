@@ -1,54 +1,46 @@
-# D-ploiement
+# 📊 **MOYO - Plateforme d'Aide à la Décision** ⚕️
 
-```markdown
-# MOYO - Plateforme d'Aide à la Décision pour l'Estimation de la Survie des Patients Atteints du Cancer Gastrique
-
-MOYO est une application interactive développée avec Streamlit, permettant l'estimation du temps de survie post-traitement des patients atteints du cancer gastrique. Elle intègre plusieurs modèles de prédiction basés sur l'apprentissage statistique et profond.
+MOYO est une application interactive développée avec **Streamlit** permettant d'estimer le temps de survie des patients atteints du cancer gastrique après traitement. L'objectif est d'offrir un outil d'aide à la décision basé sur l'intelligence artificielle et l'analyse de survie.
 
 ---
 
-## 🚀 Fonctionnalités
-
-✅ **Analyse descriptive des données**  
-✅ **Prédiction du temps de survie à l'aide de plusieurs modèles**  
-✅ **Stockage et gestion des informations des patients**  
-✅ **Visualisation interactive avec Plotly**  
-✅ **Interface intuitive avec Streamlit**
-
----
-
-## 📌 Technologies Utilisées
-
-- **Python** 🐍
-- **Streamlit** - Interface utilisateur interactive  
-- **TensorFlow / Keras** - Modèle *DeepSurv*  
-- **Lifelines** - Modèle *Cox Proportionnel des Risques*  
-- **Scikit-learn** - Modèles Random Survival Forest (*RSF*) et Gradient Boosting Survival Trees (*GBST*)  
-- **Pandas & NumPy** - Manipulation des données  
-- **Plotly** - Visualisation interactive  
+## 🚀 **Fonctionnalités**
+- **🏠 Accueil** : Présentation générale de la plateforme.
+- **📊 Analyse exploratoire** : Visualisation des données et distribution des variables.
+- **🤖 Prédiction de survie** : Utilisation de modèles statistiques et d'apprentissage automatique pour estimer le temps de survie.
+- **📚 À Propos** : Explication des causes, symptômes et traitements du cancer gastrique.
+- **📩 Contact** : Formulaire de contact pour toute question ou suggestion.
 
 ---
 
-## 📂 Structure du Projet
+## 🛠️ **Technologies utilisées**
+- **Python**
+- **Streamlit** pour l'interface utilisateur
+- **Pandas** pour la gestion des données
+- **Scikit-learn & Joblib** pour le chargement des modèles de machine learning
+- **TensorFlow/Keras** pour les modèles de deep learning
+- **Lifelines** pour l'analyse de survie (modèle de Cox)
+- **Plotly** pour la visualisation des données
 
+---
+
+## 📁 **Structure du projet**
 ```
-📁 moyo/
-│── 📁 assets/               # Images et logos  
-│── 📁 data/                 # Fichiers de données  
-│── 📁 models/               # Modèles pré-entraînés  
-│── 📁 pages/                # Modules de navigation  
-│── main.py                  # Fichier principal de l'application  
-│── requirements.txt         # Liste des dépendances  
-│── README.md                # Documentation  
+MOYO/
+│-- assets/               # Images et logos
+│-- data/                 # Fichiers de données (ex: data.xlsx)
+│-- models/               # Modèles entraînés (joblib, keras)
+│-- app.py                # Code principal de l'application
+│-- requirements.txt      # Dépendances du projet
+│-- README.md             # Documentation
 ```
 
 ---
 
-## ⚙️ Installation et Exécution
-
+## 🔧 **Installation et exécution**
 ### 1️⃣ Cloner le projet
 ```bash
-git clone https://github.com/votre-repository/moyo.git
+git clone https://github.com/votre-repo/moyo.git
 cd moyo
 ```
 
@@ -59,40 +51,29 @@ pip install -r requirements.txt
 
 ### 3️⃣ Lancer l'application
 ```bash
-streamlit run main.py
+streamlit run app.py
 ```
 
 ---
 
-## 🧠 Modèles de Prédiction Utilisés
+## 🎯 **Modèles de prédiction**
+MOYO utilise plusieurs algorithmes pour estimer la survie des patients :
+- **Cox Proportionnal Hazards (Cox PH)**
+- **Random Survival Forest (RSF)**
+- **DeepSurv (réseau de neurones)**
+- **Gradient Boosted Survival Trees (GBST)**
 
-| Modèle        | Description |
-|--------------|------------|
-| **Cox PH**   | Modèle de régression de Cox Proportionnel des Risques (*Lifelines*) |
-| **RSF**      | Random Survival Forest (*Scikit-learn*) |
-| **DeepSurv** | Réseau de neurones profond (*TensorFlow/Keras*) |
-| **GBST**     | Gradient Boosting Survival Trees (*Scikit-learn*) |
-
----
-
-## 👥 Équipe du Projet
-
-- **Pr. Aba Diop** - Maître de Conférences  
-- **PhD. Idrissa Sy** - Enseignant Chercheur  
-- **M. Ahmed Sefdine** - Étudiant  
-
-📧 Contact : [ahmed.sefdine@uadb.edu.sn](mailto:ahmed.sefdine@uadb.edu.sn)
+Les modèles sont pré-entraînés et stockés dans le dossier `models/`.
 
 ---
 
-## 📜 Licence
-
-Projet académique réalisé dans le cadre d'un mémoire de fin d'études en **Statistique et Informatique Décisionnelle**.
+## 📬 **Contact**
+📍 **Université Alioune Diop de Bambey, Sénégal**  
+📧 **Email** : ahmed.sefdine@uadb.edu.sn  
+🌐 **LinkedIn** : [linkedin.com/in/sefdineahmed](https://linkedin.com/in/sefdineahmed)  
 
 ---
 
-🔗 **Liens utiles**  
-- [Streamlit Documentation](https://docs.streamlit.io/)  
-- [Lifelines Survival Analysis](https://lifelines.readthedocs.io/)  
-- [TensorFlow & Keras](https://www.tensorflow.org/)  
-```
+Ce projet a été réalisé dans le cadre du mémoire de Master 2 en **Statistique et Informatique Décisionnelle**.
+
+---
