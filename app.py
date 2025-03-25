@@ -195,82 +195,73 @@ def save_new_patient(new_patient_data):
 # ----------------------------------------------------------
 # Définition des Pages
 # ----------------------------------------------------------
+
+
+LOGO_PATH = "assets/sefdine.jpeg"  # Remplacer par le chemin vers votre logo
+BACKGROUND_IMAGE = "assets/sefdine.jpeg"  # Remplacer par l'image de fond
+
 def accueil():
-    # Fond d'écran personnalisé
+    # Ajout d'une image de fond
     st.markdown(
-        """
+        f"""
         <style>
-        .stApp {
-            background-image: url('URL_DE_L_IMAGE_DIASPORA'); 
+        .stApp {{
+            background-image: url({BACKGROUND_IMAGE});
             background-size: cover;
             background-position: center;
-        }
+        }}
         </style>
-        """,
+        """, 
         unsafe_allow_html=True
     )
 
-    # Définition des colonnes avec logo à gauche et titre à droite
     col1, col2 = st.columns([1, 3])
     with col1:
         if os.path.exists(LOGO_PATH):
-            st.image(LOGO_PATH, width=200)  # Réduit la taille du logo
+            st.image(LOGO_PATH, width=200)
     with col2:
         st.title("⚕️ Plateforme d'Aide à la Décision")
         st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
+    
     st.markdown("---")
 
-    # Description de la plateforme
-    st.write(
-        """
-        La plateforme utilise des méthodes statistiques avancées pour estimer le temps de survie des patients après traitement pour le cancer gastrique, et propose une analyse dynamique des données cliniques.
-        """
-    )
+    # Section des fonctionnalités principales
+    st.subheader("Fonctionnalités Principales")
     
-    # Fonctionnalités principales avec icônes et liens vers des pages dédiées
-    st.markdown("### Fonctionnalités principales :")
-    
-    # Première ligne avec trois fonctionnalités
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col1:
-        st.markdown("#### 📊 Exploration interactive des données cliniques")
-        st.write("Découvrez une visualisation dynamique des données des patients et explorez les variables cliniques liées à la survie.")
-        if st.button("Explorer les données"):
-            st.write("Redirection vers l'exploration des données...")  # Exemple de redirection ou page détaillée
+    # Fonction 1 - Analyse des données cliniques
+    st.markdown("### 1. Analyse des données cliniques")
+    st.image("path/to/clinical_data_image.jpg", width=300)  # Remplacer par une image relative
+    st.markdown("""
+    Cette fonctionnalité permet d'analyser les données cliniques des patients, telles que l'âge, le sexe, 
+    les antécédents médicaux, etc., pour prédire leur temps de survie après un traitement contre le cancer gastrique.
+    """)
 
-    with col2:
-        st.markdown("#### 📈 Analyse statistique descriptive")
-        st.write("Analysez les tendances générales des données à travers des graphiques et des résumés statistiques.")
-        if st.button("Voir l'analyse descriptive"):
-            st.write("Redirection vers l'analyse statistique...")
+    # Fonction 2 - Estimation du temps de survie
+    st.markdown("### 2. Estimation du temps de survie")
+    st.image("path/to/survival_estimation_image.jpg", width=300)  # Remplacer par une image relative
+    st.markdown("""
+    Grâce à des modèles statistiques avancés, cette fonctionnalité estime avec précision le temps de survie des patients 
+    en fonction de différents facteurs, tels que le type de traitement, la réactivité du patient, etc.
+    """)
 
-    with col3:
-        st.markdown("#### 🤖 Prédiction multi-modèles de survie")
-        st.write("Utilisez des modèles prédictifs avancés pour estimer la survie des patients.")
-        if st.button("Essayer la prédiction"):
-            st.write("Redirection vers la prédiction de survie...")
+    # Fonction 3 - Interface interactive
+    st.markdown("### 3. Interface interactive")
+    st.image("path/to/interactive_interface_image.jpg", width=300)  # Remplacer par une image relative
+    st.markdown("""
+    Une interface utilisateur intuitive et interactive permettant de saisir les données des patients, 
+    de visualiser les résultats et de prendre des décisions éclairées.
+    """)
 
-    # Deuxième ligne avec deux autres fonctionnalités
-    col4, col5 = st.columns([1, 1])
-    with col4:
-        st.markdown("#### 📤 Export des résultats cliniques")
-        st.write("Exportez les résultats d'analyse sous différents formats pour un usage externe.")
-        if st.button("Exporter les résultats"):
-            st.write("Redirection vers l'export des résultats...")
-
-    with col5:
-        st.markdown("#### 🌍 Communauté et support")
-        st.write("Rejoignez la communauté pour discuter et échanger des informations sur les traitements.")
-        if st.button("Accéder à la communauté"):
-            st.write("Redirection vers la communauté...")
+    # Section de la diaspora (ajouter une image et une description)
+    st.subheader("Nous sommes connectés à la diaspora")
+    st.image("path/to/diaspora_image.jpg", width=500)  # Remplacer par une image de la diaspora
+    st.markdown("""
+    La plateforme est dédiée à aider les patients du monde entier, en particulier ceux issus de la diaspora, 
+    en leur fournissant des outils pour évaluer leur santé et leur survie post-traitement.
+    """)
 
     st.markdown("---")
-    st.write(
-        """
-        ### À propos
-        Cette plateforme est dédiée à l'optimisation du suivi post-traitement des patients atteints du cancer gastrique, en apportant des outils statistiques et prédictifs afin d'améliorer la prise en charge médicale.
-        """
-    )
+
 
 
 
