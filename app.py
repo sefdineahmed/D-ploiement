@@ -231,7 +231,8 @@ def accueil():
         col1, col2 = st.columns([1, 3])
         with col1:
             if os.path.exists(LOGO_PATH):
-                st.image(LOGO_PATH, use_column_width=True)
+                # Correction appliquée ici
+                st.image(LOGO_PATH, use_container_width=True)
         
         with col2:
             st.markdown('<div class="header-section">', unsafe_allow_html=True)
@@ -294,7 +295,6 @@ def accueil():
         <p>Accédez à l'outil de prédiction via le menu de navigation latéral →</p>
     </div>
     """, unsafe_allow_html=True)
-
 
 def analyse_descriptive():
     st.title("📊 Analyse Exploratoire")
