@@ -302,7 +302,19 @@ def a_propos():
         L'infection par la bactérie *H. pylori* est un facteur majeur dans le développement des maladies gastriques, notamment le cancer de l'estomac. Contractée généralement pendant l'enfance, l'infection peut persister toute la vie sans traitement, entraînant une inflammation chronique et des lésions précancéreuses. Au Sénégal, où les conditions socio-économiques et l'accès à un assainissement optimal peuvent être limités, le risque d'infection demeure élevé.
         """
     )
-    st.image(TEAM_IMG_PATH, width=1000)
+    #st.image(TEAM_IMG_PATH, width=1000)
+    st.markdown(
+    f"""
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <img src="{TEAM_IMG_PATH}" width="600" height="800">
+        <p style="text-align: center; font-size: 16px; font-style: italic; color: gray;">
+            Illustration des cellules affectées par l'infection à <i>H. pylori</i>
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
     # Transmission de la bactérie
     st.title("🦠 Transmission")
@@ -381,10 +393,10 @@ def a_propos():
     for i, member in enumerate(TEAM_MEMBERS):
         with cols[i]:
             if os.path.exists(member["photo"]):
-                st.image(member["photo"], width=500)
+                st.image(member["photo"], width=400)
             st.markdown(f"**{member['name']}**  \n*{member['role']}*")
             st.markdown(f"[📧 Email]({member['email']})")
-            st.markdown(f"[🔗 LinkedIn]({member['linkedin']})")
+            st.markdown(f"[🌐LinkedIn]({member['linkedin']})")
 
 def contact():
     st.title("📩 Contact")
