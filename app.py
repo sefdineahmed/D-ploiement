@@ -303,17 +303,7 @@ def a_propos():
         """
     )
     #st.image(TEAM_IMG_PATH, width=1000)
-    st.markdown(
-    f"""
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <img src="{TEAM_IMG_PATH}" width="600" height="800">
-        <p style="text-align: center; font-size: 16px; font-style: italic; color: gray;">
-            Illustration des cellules affectées par l'infection à <i>H. pylori</i>
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+    st.markdown(TEAM_IMG_PATH}, style="width:600px; height:800px", unsafe_allow_html=True)
 
 
     # Transmission de la bactérie
