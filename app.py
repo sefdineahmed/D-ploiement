@@ -397,7 +397,7 @@ def a_propos():
                 st.image(member["photo"], width=300)
             st.markdown(f"**{member['name']}**  \n*{member['role']}*")
             st.markdown(f"[📧 Email]({member['email']})")
-            st.markdown(f"[🌐LinkedIn]({member['linkedin']})")
+            st.markdown(f"[LinkedIn]({member['linkedin']})")
 
 def contact():
     st.title("📩 Contact")
