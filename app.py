@@ -196,56 +196,33 @@ def save_new_patient(new_patient_data):
 # Définition des Pages
 # ----------------------------------------------------------
 
-# Définition des Pages
+# ----------------------------------------------------------
+# Définition des Pages avec image en arrière-plan
+# ----------------------------------------------------------
 def accueil():
-    # Création des colonnes avec un fond d'image
+    # Ajout d'une image d'arrière-plan
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("https://path_to_your_image.jpg");
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+        }}
+        </style>
+        """, unsafe_allow_html=True)
+
+    # Création des colonnes pour le logo et le texte
     col1, col2 = st.columns([1, 3])
-    
     with col1:
         if os.path.exists(LOGO_PATH):
-            st.image(LOGO_PATH, width=150)  # Logo plus petit pour plus d'espace visuel
-
+            st.image(LOGO_PATH, width=200)  # Ajustez la largeur de l'image du logo selon votre besoin
     with col2:
-        # Titre accrocheur
         st.title("⚕️ Plateforme d'Aide à la Décision")
         st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
-    
-    st.markdown("---")
-    
-    # Section d'introduction visuelle avec une image de fond (diaspora)
-    st.markdown("<style> .stApp { background-image: url('https://path_to_your_image'); background-size: cover; }</style>", unsafe_allow_html=True)
-    st.markdown("### Bienvenue sur notre plateforme")
-    st.markdown("Cette plateforme utilise des algorithmes de machine learning pour estimer le temps de survie des patients après un traitement contre le cancer gastrique. Explorez les différentes fonctionnalités ci-dessous pour découvrir comment nous vous aidons à prendre des décisions éclairées.")
 
     st.markdown("---")
-    
-    # Mini-pages avec image et description de chaque fonction principale
-    st.subheader("Fonctionnalités Principales")
-    with st.expander("Estimation du temps de survie"):
-        st.image("path_to_image_survie", width=700)
-        st.markdown("""
-            Cette fonctionnalité permet de prédire le temps de survie des patients après leur traitement. 
-            Grâce à des modèles statistiques avancés et des données cliniques, nous fournissons des estimations fiables pour aider à la prise de décision.
-        """)
-
-    with st.expander("Suivi des traitements"):
-        st.image("path_to_image_suivi", width=700)
-        st.markdown("""
-            Un outil de suivi détaillé du parcours de traitement des patients. Il aide les médecins à suivre l'efficacité des traitements et ajuster le protocole selon les résultats.
-        """)
-
-    with st.expander("Analyse des risques"):
-        st.image("path_to_image_risque", width=700)
-        st.markdown("""
-            Cette fonctionnalité analyse les risques associés au traitement en prenant en compte des facteurs comme l'âge, les antécédents médicaux et d'autres critères.
-        """)
-    
-    st.markdown("---")
-    
-    # Section d'appel à l'action pour engager les utilisateurs
-    st.markdown("<h2 style='text-align: center;'>Prêt à analyser ?</h2>", unsafe_allow_html=True)
-    st.button("Commencer l'analyse", key="start_analysis", help="Cliquez ici pour commencer l'estimation du temps de survie des patients.")
-
 
 
 def analyse_descriptive():
