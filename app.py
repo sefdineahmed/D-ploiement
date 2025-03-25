@@ -199,30 +199,31 @@ def save_new_patient(new_patient_data):
 # ----------------------------------------------------------
 # Définition des Pages avec image en arrière-plan
 # ----------------------------------------------------------
+# ----------------------------------------------------------
+# Définition des Pages
+# ----------------------------------------------------------
 def accueil():
-    # Ajout d'une image d'arrière-plan
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url("https://path_to_your_image.jpg");
-            background-size: cover;
-            background-position: center;
-            height: 100vh;
-        }}
-        </style>
-        """, unsafe_allow_html=True)
-
-    # Création des colonnes pour le logo et le texte
     col1, col2 = st.columns([1, 3])
     with col1:
         if os.path.exists(LOGO_PATH):
-            st.image(LOGO_PATH, width=200)  # Ajustez la largeur de l'image du logo selon votre besoin
+            st.image(LOGO_PATH, width=1000)
     with col2:
         st.title("⚕️ Plateforme d'Aide à la Décision")
         st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
-
     st.markdown("---")
+
+    # Ajouter une image d'arrière-plan
+    st.markdown(
+        """
+        <style>
+        .reportview-container {
+            background-image: url("URL_DE_L'IMAGE"); 
+            background-size: cover;
+            background-position: center;
+        }
+        </style>
+        """, unsafe_allow_html=True
+    )
 
 
 def analyse_descriptive():
