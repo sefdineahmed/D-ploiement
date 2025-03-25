@@ -381,7 +381,7 @@ def a_propos():
     for i, member in enumerate(TEAM_MEMBERS):
         with cols[i]:
             if os.path.exists(member["photo"]):
-                st.image(member["photo"], width=100)
+                st.image(member["photo"], width=500)
             st.markdown(f"**{member['name']}**  \n*{member['role']}*")
             st.markdown(f"[📧 Email]({member['email']})")
             st.markdown(f"[🔗 LinkedIn]({member['linkedin']})")
