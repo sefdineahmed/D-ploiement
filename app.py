@@ -303,7 +303,7 @@ def a_propos():
         """
     )
     #st.image(TEAM_IMG_PATH, width=1000)
-    st.markdown(TEAM_IMG_PATH}, style="width:600px; height:800px", unsafe_allow_html=True)
+    st.markdown(TEAM_IMG_PATH, width=600px; height=800px, unsafe_allow_html=True)
 
 
     # Transmission de la bactérie
