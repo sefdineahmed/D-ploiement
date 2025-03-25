@@ -196,23 +196,83 @@ def save_new_patient(new_patient_data):
 # Définition des Pages
 # ----------------------------------------------------------
 def accueil():
+    # Fond d'écran personnalisé
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-image: url('URL_DE_L_IMAGE_DIASPORA'); 
+            background-size: cover;
+            background-position: center;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Définition des colonnes avec logo à gauche et titre à droite
     col1, col2 = st.columns([1, 3])
     with col1:
         if os.path.exists(LOGO_PATH):
-            st.image(LOGO_PATH, width=1000)
+            st.image(LOGO_PATH, width=200)  # Réduit la taille du logo
     with col2:
         st.title("⚕️ Plateforme d'Aide à la Décision")
         st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
     st.markdown("---")
+
+    # Description de la plateforme
     st.write(
         """
-        ### Fonctionnalités principales :
-        - 📊 Exploration interactive des données cliniques
-        - 📈 Analyse statistique descriptive
-        - 🤖 Prédiction multi-modèles de survie
-        - 📤 Export des résultats cliniques
+        La plateforme utilise des méthodes statistiques avancées pour estimer le temps de survie des patients après traitement pour le cancer gastrique, et propose une analyse dynamique des données cliniques.
         """
     )
+    
+    # Fonctionnalités principales avec icônes et liens vers des pages dédiées
+    st.markdown("### Fonctionnalités principales :")
+    
+    # Première ligne avec trois fonctionnalités
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col1:
+        st.markdown("#### 📊 Exploration interactive des données cliniques")
+        st.write("Découvrez une visualisation dynamique des données des patients et explorez les variables cliniques liées à la survie.")
+        if st.button("Explorer les données"):
+            st.write("Redirection vers l'exploration des données...")  # Exemple de redirection ou page détaillée
+
+    with col2:
+        st.markdown("#### 📈 Analyse statistique descriptive")
+        st.write("Analysez les tendances générales des données à travers des graphiques et des résumés statistiques.")
+        if st.button("Voir l'analyse descriptive"):
+            st.write("Redirection vers l'analyse statistique...")
+
+    with col3:
+        st.markdown("#### 🤖 Prédiction multi-modèles de survie")
+        st.write("Utilisez des modèles prédictifs avancés pour estimer la survie des patients.")
+        if st.button("Essayer la prédiction"):
+            st.write("Redirection vers la prédiction de survie...")
+
+    # Deuxième ligne avec deux autres fonctionnalités
+    col4, col5 = st.columns([1, 1])
+    with col4:
+        st.markdown("#### 📤 Export des résultats cliniques")
+        st.write("Exportez les résultats d'analyse sous différents formats pour un usage externe.")
+        if st.button("Exporter les résultats"):
+            st.write("Redirection vers l'export des résultats...")
+
+    with col5:
+        st.markdown("#### 🌍 Communauté et support")
+        st.write("Rejoignez la communauté pour discuter et échanger des informations sur les traitements.")
+        if st.button("Accéder à la communauté"):
+            st.write("Redirection vers la communauté...")
+
+    st.markdown("---")
+    st.write(
+        """
+        ### À propos
+        Cette plateforme est dédiée à l'optimisation du suivi post-traitement des patients atteints du cancer gastrique, en apportant des outils statistiques et prédictifs afin d'améliorer la prise en charge médicale.
+        """
+    )
+
+
 
 def analyse_descriptive():
     st.title("📊 Analyse Exploratoire")
