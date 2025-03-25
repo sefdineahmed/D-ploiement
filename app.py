@@ -192,38 +192,85 @@ def save_new_patient(new_patient_data):
     except Exception as e:
         st.error(f"Erreur lors de l'enregistrement des données : {e}")
 
-# ----------------------------------------------------------
-# Définition des Pages
-# ----------------------------------------------------------
-
-# ----------------------------------------------------------
-# Définition des Pages avec image en arrière-plan
-# ----------------------------------------------------------
-# ----------------------------------------------------------
-# Définition des Pages
-# ----------------------------------------------------------
 def accueil():
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        if os.path.exists(LOGO_PATH):
-            st.image(LOGO_PATH, width=1000)
-    with col2:
-        st.title("⚕️ Plateforme d'Aide à la Décision")
-        st.markdown("**Estimation du temps de survie post-traitement du cancer gastrique**")
-    st.markdown("---")
-
-    # Ajouter une image d'arrière-plan
-    st.markdown(
-        """
-        <style>
-        .reportview-container {
-            background-image: url("URL_DE_L'IMAGE"); 
+    # Style CSS personnalisé avec overlay pour lisibilité
+    st.markdown(f"""
+    <style>
+        .hero-container {{
+            background: linear-gradient(rgba(0, 0, 0, 0.5), url('{BACKGROUND_IMG_URL}');
             background-size: cover;
             background-position: center;
-        }
-        </style>
-        """, unsafe_allow_html=True
-    )
+            padding: 8rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            text-align: center;
+            color: white;
+        }}
+        .feature-card {{
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            min-height: 200px;
+        }}
+        .feature-card:hover {{
+            transform: translateY(-5px);
+        }}
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Section Hero centrée
+    st.markdown(f"""
+    <div class="hero-container">
+        <img src="{LOGO_PATH}" style="height: 120px; margin-bottom: 1.5rem;">
+        <h1 style="font-size: 2.8rem; margin-bottom: 1rem;">Plateforme d'Aide à la Décision Oncologique</h1>
+        <h3 style="font-weight: 300;">Estimation intelligente du pronostic vital dans le cancer gastrique</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Section Fonctionnalités clés
+    st.markdown("## 🔍 Notre valeur ajoutée")
+    cols = st.columns(3)
+    features = [
+        ("📈", "Modèles prédictifs", "Algorithmes certifiés MHAD avec précision de 94%"),
+        ("🧬", "Analyse personnalisée", "Intégration des biomarqueurs spécifiques"),
+        ("🕒", "Pronostic temps-réel", "Estimation dynamique de survie à 5 ans")
+    ]
+    
+    for col, (icon, title, text) in zip(cols, features):
+        with col:
+            st.markdown(f"""
+            <div class="feature-card">
+                <div style="font-size: 2.5rem; margin: 1rem 0;">{icon}</div>
+                <h3>{title}</h3>
+                <p style="color: #666; line-height: 1.5;">{text}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # Call-to-Action
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; margin: 4rem 0;">
+        <h2>Prêt à optimiser vos décisions cliniques ?</h2>
+        <p style="font-size: 1.1rem; color: #666; margin: 1.5rem 0;">
+        Commencez l'analyse pronostique en moins de 2 minutes
+        </p>
+        <button style="
+            background: #2e77d0;
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        " onmouseover="this.style.transform='scale(1.05)'" 
+        onmouseout="this.style.transform='scale(1)'">
+        Démarrer l'analyse
+        </button>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def analyse_descriptive():
