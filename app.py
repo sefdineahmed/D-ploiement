@@ -340,7 +340,7 @@ def a_propos():
         - Densité familiale élevée
         """)
     with col2:
-        st.image(TEAM_IMG_PATH, use_column_width=True)
+        st.image(TEAM_IMG_PATH, use_container_width=True)  # Correction ici
 
     # Séparateur visuel
     st.markdown("---")
@@ -411,7 +411,7 @@ def a_propos():
     for i, (member, col) in enumerate(zip(TEAM_MEMBERS, cols)):
         with col:
             st.markdown(f"<div class='team-card'>", unsafe_allow_html=True)
-            st.image(member["photo"], use_column_width=True)
+            st.image(member["photo"], use_container_width=True)  # Correction ici
             st.markdown(f"""
             <div style="text-align: center; margin: 1em 0;">
                 <h3 style="margin: 0; color: #2e77d0;">{member['name']}</h3>
