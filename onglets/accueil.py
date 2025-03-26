@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from utils import LOGO_PATH
+from utils import LOGO_PATH  # Assurez-vous que LOGO_PATH est défini dans utils.py
 
 def accueil():
     st.markdown("""
@@ -58,34 +58,3 @@ def accueil():
         - Comparez les différentes options de traitement  
         - Planifiez le suivi médical automatisé  
         """)
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("""
-        <div style="padding: 1.5rem; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #2e77d0;">📊 Données en temps réel</h3>
-            <p>Base de données actualisée quotidiennement avec les dernières données épidémiologiques</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-        <div style="padding: 1.5rem; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #2e77d0;">🤖 Modèle prédictif</h3>
-            <p>Algorithme certifié CE Medical (accuracy: 92.4% - AUC: 0.94)</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div style="padding: 1.5rem; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #2e77d0;">🌍 Impact national</h3>
-            <p>+1500 patients suivis dans 12 centres de santé partenaires</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; padding: 3rem;">
-        <h2 style="color: #2e77d0;">Prêt à commencer ?</h2>
-        <p>Accédez à l'outil de prédiction via le menu de navigation latéral →</p>
-    </div>
-    """, unsafe_allow_html=True)
