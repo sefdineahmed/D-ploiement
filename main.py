@@ -1,5 +1,5 @@
 import streamlit as st
-from onglets import accueil, analyse, prediction, apropos, contact
+from onglets import accueil, analyse_descriptive, modelisation, a_propos, contact
 
 # Configuration de la page
 st.set_page_config(
@@ -11,15 +11,14 @@ st.set_page_config(
 
 # Dictionnaire des pages
 PAGES = {
-    "🏠 Accueil": accueil.accueil,
-    "📊 Analyse": analyse.analyse_descriptive,
-    "🤖 Prédiction": prediction.modelisation,
-    "📚 À Propos": apropos.a_propos,
-    "📩 Contact": contact.contact
+    "🏠 Accueil": accueil,
+    "📊 Analyse": analyse_descriptive,
+    "🤖 Prédiction": modelisation,
+    "📚 À Propos": a_propos,
+    "📩 Contact": contact
 }
 
 def main():
-    # Style CSS pour ajuster l'alignement des onglets (optionnel)
     st.markdown(
         """
         <style>
