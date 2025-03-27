@@ -60,7 +60,7 @@ def analyse_descriptive():
                 fig_corr.add_annotation(
                     x=j, 
                     y=i, 
-                    text=f"{corr_matrix.iloc[i, j]:.2f}",
+                    text=f"{corr_matrix.iloc[i, j]:.3f}",
                     showarrow=False,
                     font=dict(size=10, color='white'),
                     align='center'
@@ -68,55 +68,3 @@ def analyse_descriptive():
         st.plotly_chart(fig_corr, use_container_width=True)
     
     st.markdown("---")
-    
-    # Encodage des variables catégoriques pour Kaplan-Meier
-    cat_cols = df.select_dtypes(include=['object']).columns
-    label_encoder = LabelEncoder()
-    for col in cat_cols:
-        df[col] = label_encoder.fit_transform(df[col].astype(str))
-    
-    # Courbe de Kaplan-Meier globale
-    st.subheader("📈 Courbe de Kaplan-Meier Globale")
-    kmf = KaplanMeierFitter()
-    if 'Tempsdesuivi (Mois)' in df.columns and 'Deces' in df.columns:
-        kmf.fit(df['Tempsdesuivi (Mois)'], event_observed=df['Deces'])
-        fig_km = kmf.plot_survival_function(ci_show=True)
-        
-        # Ajout des points de censure (Deces = 0)
-        censored_times = df.loc[df['Deces'] == 0, 'Tempsdesuivi (Mois)']
-        survival_probabilities = [float(kmf.survival_function_at_times(time).iloc[0]) for time in censored_times]
-        plt.scatter(censored_times, survival_probabilities, color='red', label='Censures', alpha=0.7)
-        plt.title('Fonction de survie avec intervalles de confiance et censures')
-        plt.xlabel('Mois')
-        plt.ylabel('Probabilité de survie')
-        plt.legend()
-        st.pyplot(plt.gcf())
-        plt.clf()
-    else:
-        st.error("Les colonnes 'Tempsdesuivi (Mois)' et/ou 'Deces' sont absentes.")
-    
-    st.markdown("---")
-    
-    # Sélection interactive d'une variable pour Kaplan-Meier
-    st.subheader("📊 Analyse Kaplan-Meier par variable")
-    km_variables = ['Cardiopathie', 'Ulceregastrique', 'Douleurepigastrique', 'Ulcero-bourgeonnant', 
-                    'Denitrution', 'Tabac', 'Mucineux', 'Infiltrant', 'Stenosant', 'Metastases', 'Adenopathie']
-    selected_variable = st.selectbox("Choisir une variable pour l'analyse Kaplan-Meier", km_variables)
-    
-    def plot_kaplan_meier(variable):
-        fig, ax = plt.subplots(figsize=(8, 4))
-        kmf_local = KaplanMeierFitter()
-        # Tracer pour chaque groupe de la variable
-        for group in sorted(df[variable].unique()):
-            mask = (df[variable] == group)
-            kmf_local.fit(df.loc[mask, 'Tempsdesuivi (Mois)'], event_observed=df.loc[mask, 'Deces'], label=str(group))
-            kmf_local.plot(ax=ax, ci_show=True)
-        ax.set_xlabel("Temps (mois)", fontsize=10)
-        ax.set_ylabel("Probabilité de survie", fontsize=10)
-        ax.legend(fontsize=10)
-        ax.set_title(f"Kaplan-Meier pour {variable}", fontsize=12)
-        plt.tight_layout()
-        return fig
-    
-    fig_selected = plot_kaplan_meier(selected_variable)
-    st.pyplot(fig_selected)
