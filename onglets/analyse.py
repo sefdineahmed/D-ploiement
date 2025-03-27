@@ -4,6 +4,7 @@ import plotly.express as px
 from plotly.figure_factory import create_distplot
 from lifelines import KaplanMeierFitter
 from utils import load_data
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 def analyse_descriptive():
     st.title("📊 Analyse Exploratoire")
@@ -18,7 +19,6 @@ def analyse_descriptive():
     st.markdown("---")
     
     # Calcul des statistiques de l'âge
-    df['Deces'] = df['Deces'].replace({'OUI': 1, 'NON': 0})
     AGE = df['AGE']  # Assurez-vous que la colonne AGE existe dans le DataFrame
     age_min = np.min(AGE)
     age_median = np.median(AGE)
@@ -72,20 +72,39 @@ def analyse_descriptive():
 
     # Courbe de Kaplan-Meier
     st.subheader("📈 Courbes de Kaplan-Meier")
-    kmf = KaplanMeierFitter()
-    
-    # Filtrage des variables 'event' et 'time'
-    event_column = 'Deces'  # Changer si nécessaire
-    time_column = 'Tempsdesuivi (Mois)'  # Changer si nécessaire
-    
-    if event_column in df.columns and time_column in df.columns:
-        kmf.fit(df[time_column], event_observed=df[event_column])
-        
-        # Courbe de Kaplan-Meier
-        fig = kmf.plot(ci_show=True)
-        st.pyplot(fig)
-    else:
-        st.error("Les colonnes 'Deces' ou 'Tempsdesuivi' ne sont pas présentes dans les données.")
+   # Identifier les colonnes catégoriques
+   CatCols = df.select_dtypes(include=['object']).columns
+   # Encodage des variables catégoriques
+   #Label Encoding
+    label_encoder = LabelEncoder()
+   for col in CatCols:
+    df[col] = label_encoder.fit_transform(df[col].astype(str))
+
+# Initialisation du Kaplan-Meier
+kmf = KaplanMeierFitter()
+
+# Ajustement du modèle avec les données
+kmf.fit(df['Tempsdesuivi (Mois)'], event_observed=df['Deces'])
+
+# Tracer la fonction de survie avec les intervalles de confiance
+ax = kmf.plot_survival_function(ci_show=True)  # Affiche les intervalles de confiance
+
+# Ajouter les points de censure
+censored_times = df.loc[df['Deces'] == 0, 'Tempsdesuivi (Mois)']
+survival_probabilities = [float(kmf.survival_function_at_times(time).iloc[0]) for time in censored_times]
+
+plt.scatter(censored_times,
+            survival_probabilities,
+            color='red',
+            label='Censures',
+            alpha=0.7)
+
+# Ajout des titres et légendes
+plt.title('Fonction de survie avec intervalles de confiance et censures')
+plt.xlabel('Mois')
+plt.ylabel('Probabilité de survie')
+plt.legend()
+plt.show()
 
     st.markdown("---")
 
