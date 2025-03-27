@@ -1,5 +1,33 @@
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import streamlit as st
 import re
+
+def send_email(name, email, message):
+    sender_email = "votre_email@example.com"  # Remplacez par votre email (celui qui envoie l'email)
+    receiver_email = "ahmed.sefdine@uadb.edu.sn"  # Destinataire
+
+    # Créez le message
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+    msg["Subject"] = f"Message de {name} via le formulaire de contact"
+
+    body = f"Nom: {name}\nEmail: {email}\nMessage:\n{message}"
+    msg.attach(MIMEText(body, "plain"))
+
+    # Connexion au serveur SMTP pour envoyer l'email
+    try:
+        with smtplib.SMTP("smtp.example.com", 587) as server:  # Remplacez par le serveur SMTP de votre fournisseur
+            server.starttls()  # Sécurisation de la connexion
+            server.login("votre_email@example.com", "votre_mot_de_passe")  # Connexion avec vos identifiants
+            text = msg.as_string()
+            server.sendmail(sender_email, receiver_email, text)  # Envoi de l'email
+        return True
+    except Exception as e:
+        print(f"Erreur lors de l'envoi de l'email: {e}")
+        return False
 
 def contact():
     st.title("📩 Contact")
@@ -75,6 +103,8 @@ def contact():
                 if not re.match(pattern, email):
                     st.error("Veuillez saisir un email valide.")
                 else:
-                    # Ici, intégrer votre logique d'envoi d'email
-                    # Exemple : send_email(name, email, message)
-                    st.success("✅ Message envoyé avec succès !")
+                    # Envoi de l'email
+                    if send_email(name, email, message):
+                        st.success("✅ Message envoyé avec succès !")
+                    else:
+                        st.error("❌ Une erreur est survenue lors de l'envoi de l'email.")
