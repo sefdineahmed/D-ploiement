@@ -1,5 +1,5 @@
 def analyse_descriptive():
-    # Style CSS avancé
+    # Style CSS avancé corrigé
     st.markdown(f"""
         <style>
             :root {{
