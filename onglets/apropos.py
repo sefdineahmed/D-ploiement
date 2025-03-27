@@ -5,273 +5,214 @@ def a_propos():
     st.markdown(f"""
     <style>
         :root {{
-            --primary: #2563eb;
-            --secondary: #4f46e5;
-            --accent: #22d3ee;
+            --primary: #2e77d0;
+            --secondary: #1d5ba6;
+            --accent: #dc3545;
         }}
         
         .main-container {{
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
         }}
         
         .section-title {{
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
+            font-family: 'Roboto Condensed', sans-serif;
             color: var(--primary);
+            font-size: 2.5rem;
             position: relative;
-            padding-bottom: 1rem;
+            padding-bottom: 0.5rem;
             margin: 3rem 0 2rem !important;
         }}
         
-        .section-title:after {{
+        .section-title::after {{
             content: '';
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 60px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            border-radius: 2px;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
         }}
         
         .data-card {{
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
             padding: 2rem;
             margin: 1.5rem 0;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(46, 119, 208, 0.1);
             transition: transform 0.3s ease;
         }}
         
         .data-card:hover {{
             transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
         }}
         
-        .timeline {{
+        .highlight {{
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.1em;
+        }}
+        
+        .team-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }}
+        
+        .member-card {{
             position: relative;
-            padding: 2rem 0;
-        }}
-        
-        .timeline-item {{
+            overflow: hidden;
+            border-radius: 15px;
             padding: 1.5rem;
-            margin-left: 30px;
-            border-left: 3px solid var(--accent);
-            position: relative;
-        }}
-        
-        .timeline-item:before {{
-            content: '';
-            position: absolute;
-            left: -10px;
-            top: 20px;
-            width: 16px;
-            height: 16px;
-            background: var(--secondary);
-            border-radius: 50%;
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
-        }}
-        
-        .team-card {{
             background: white;
-            padding: 1.5rem;
-            border-radius: 16px;
             text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }}
         
-        .team-card img {{
+        .member-photo {{
             width: 120px;
             height: 120px;
-            object-fit: cover;
             border-radius: 50%;
             margin: 0 auto 1rem;
-            border: 3px solid var(--accent);
+            object-fit: cover;
+            border: 3px solid var(--primary);
         }}
         
         .badge {{
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent);
+            color: white;
+            padding: 0.3rem 0.8rem;
             border-radius: 20px;
-            background: rgba(34, 211, 238, 0.1);
-            color: var(--accent);
-            font-size: 0.85rem;
-            margin: 0.5rem 0;
+            font-size: 0.8em;
         }}
         
-        .stTabs [role="tablist"] {{
+        .stat-box {{
+            display: flex;
+            align-items: center;
             gap: 1rem;
-            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(46, 119, 208, 0.05);
+            border-radius: 12px;
+            margin: 1rem 0;
         }}
         
-        .stTabs [role="tab"] {{
-            padding: 1rem 2rem !important;
-            border-radius: 10px !important;
-            transition: all 0.3s ease !important;
-        }}
-        
-        .stTabs [aria-selected="true"] {{
-            background: var(--primary) !important;
+        .stat-icon {{
+            font-size: 2rem;
+            color: var(--primary);
         }}
     </style>
     """, unsafe_allow_html=True)
 
+    # Section Épidémiologie
     with st.container():
-        st.markdown("<div class='main-container'>", unsafe_allow_html=True)
+        st.markdown("<h1 class='section-title'>📊 Épidémiologie Nationale</h1>", unsafe_allow_html=True)
         
-        # Section En-tête
-        st.markdown("""
-        <div style="text-align: center; margin: 4rem 0;">
-            <h1 style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
-                Initiative Nationale de Lutte Contre H. pylori
-            </h1>
-            <div class="badge">Depuis 2018</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Section Statistiques
-        cols = st.columns(3)
-        stats = [
-            {"value": "82%", "label": "Prévalence nationale"},
-            {"value": "150k+", "label": "Patients traités"},
-            {"value": "92%", "label": "Taux de succès"}
-        ]
-        for col, stat in zip(cols, stats):
-            with col:
-                st.markdown(f"""
-                <div class="data-card">
-                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary);">
-                        {stat['value']}
-                    </div>
-                    <div style="color: #64748b; font-size: 0.9rem;">
-                        {stat['label']}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        # Section Causes
-        st.markdown("<h2 class='section-title'>Étiologie et Facteurs de Risque</h2>", unsafe_allow_html=True)
         col1, col2 = st.columns([2, 1])
         with col1:
             st.markdown("""
-            <div class="data-card">
-                <h3 style="margin-top: 0;">Principaux déterminants</h3>
-                <ul style="padding-left: 1.5rem;">
-                    <li>Conditions socio-économiques</li>
-                    <li>Accès à l'eau potable</li>
-                    <li>Facteurs génétiques</li>
-                </ul>
-                <div class="badge">Étude SEN-HPylori 2023</div>
+            <div class='data-card'>
+                <h3 style='color: var(--primary); margin-top:0;'>Répartition Géographique</h3>
+                <div class='stat-box'>
+                    <div class='stat-icon'>🌍</div>
+                    <div>
+                        <h4 style='margin:0;'>Prévalence Régionale</h4>
+                        <p style='margin:0;'>Dakar: <span class='highlight'>82%</span> | Thiès: <span class='highlight'>78%</span><br>
+                        Saint-Louis: <span class='highlight'>75%</span> | Ziguinchor: <span class='highlight'>68%</span></p>
+                    </div>
+                </div>
+                <div class='stat-box'>
+                    <div class='stat-icon'>👥</div>
+                    <div>
+                        <h4 style='margin:0;'>Démographie</h4>
+                        <p style='margin:0;'>Âge moyen: <span class='highlight'>34 ans</span><br>
+                        Ratio H/F: <span class='highlight'>1.2:1</span></p>
+                    </div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
+        
         with col2:
             st.image(TEAM_IMG_PATH, use_container_width=True)
-        
-        # Timeline d'infection
-        st.markdown("<h2 class='section-title'>Processus Infectieux</h2>", unsafe_allow_html=True)
+
+    # Section Stratégies
+    st.markdown("<h1 class='section-title'>🛡️ Stratégies de Contrôle</h1>", unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["Prévention", "Diagnostic", "Traitement"])
+    with tab1:
         st.markdown("""
-        <div class="data-card">
-            <div class="timeline">
-                <div class="timeline-item">
-                    <h4>Contamination initiale</h4>
-                    <p>Transmission oro-fécale ou par eau contaminée</p>
-                </div>
-                <div class="timeline-item">
-                    <h4>Colonisation gastrique</h4>
-                    <p>Adhésion à la muqueuse gastrique en 48h</p>
-                </div>
-                <div class="timeline-item">
-                    <h4>Phase clinique</h4>
-                    <p>Apparition des symptômes après 2-3 semaines</p>
-                </div>
-            </div>
+        <div class='data-card'>
+            <h4 style='color: var(--primary);'>Plan de Prévention National</h4>
+            <ul>
+                <li>🚰 Programme d'accès à l'eau potable</li>
+                <li>🏫 Éducation sanitaire dans les écoles</li>
+                <li>🏥 Dépistage communautaire gratuit</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Onglets cliniques
-        st.markdown("<h2 class='section-title'>Protocoles Cliniques</h2>", unsafe_allow_html=True)
-        tab1, tab2, tab3, tab4 = st.tabs(["🚨 Symptomatologie", "🔍 Diagnostic", "💊 Thérapeutique", "🛡️ Prévention"])
-        
-        with tab1:
-            st.markdown("""
-            <div class="data-card">
-                <h3 style="margin-top: 0;">Tableau clinique typique</h3>
-                <ul>
-                    <li>Dyspepsie persistante (>3 mois)</li>
-                    <li>Anémie ferriprive inexpliquée</li>
-                    <li>Perte de poids progressive</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tab2:
-            st.markdown("""
-            <div class="data-card">
-                <h3>Arbre décisionnel diagnostique</h3>
-                <pre style="background: #f8fafc; padding: 1rem; border-radius: 8px;">
-def protocol_diagnostic():
-    if patient.age > 50:
-        return "Endoscopie obligatoire"
-    elif test_serologique.positivity:
-        return "Test respiratoire"
-    else:
-        return "Suivi à 6 mois"
+    
+    with tab2:
+        st.markdown("""
+        <div class='data-card'>
+            <h4 style='color: var(--primary);'>Protocole Diagnostique</h4>
+            <ol>
+                <li>🔍 Test respiratoire (sensibilité 95%)</li>
+                <li>🧪 Analyse sérologique</li>
+                <li>📋 Évaluation endoscopique</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with tab3:
+        st.markdown("""
+        <div class='data-card'>
+            <h4 style='color: var(--primary);'>Schéma Thérapeutique</h4>
+            <div style='background: #f8f9fa; padding: 1rem; border-radius: 10px;'>
+                <pre style='margin:0;'>
+Thérapie Quadruple (14 jours):
+  - Oméprazole 20mg ×2/j
+  - Clarithromycine 500mg ×2/j
+  - Amoxicilline 1g ×2/j
+  - Métronidazole 500mg ×3/j
                 </pre>
             </div>
-            """, unsafe_allow_html=True)
-        
-        with tab3:
-            st.markdown("""
-            <div class="data-card">
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-                    <div>
-                        <h4>Première ligne</h4>
-                        <p>Triple thérapie (14 jours)</p>
-                        <div class="badge">Efficacité 85%</div>
-                    </div>
-                    <div>
-                        <h4>Résistance</h4>
-                        <p>Quadrithérapie (10 jours)</p>
-                        <div class="badge">Efficacité 92%</div>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tab4:
-            st.markdown("""
-            <div class="data-card">
-                <h3>Stratégies préventives</h3>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <div class="badge">Éducation sanitaire</div>
-                    <div class="badge">Dépistage familial</div>
-                    <div class="badge">Traitement de l'eau</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Équipe scientifique
-        st.markdown("<h2 class='section-title' style='text-align: center;'>Comité Scientifique</h2>", unsafe_allow_html=True)
-        cols = st.columns(3)
-        for member, col in zip(TEAM_MEMBERS, cols):
-            with col:
-                st.markdown(f"""
-                <div class="team-card">
-                    <img src="{member['photo']}" alt="{member['name']}">
-                    <h3 style="margin: 0.5rem 0;">{member['name']}</h3>
-                    <p style="color: var(--primary); font-weight: 500;">{member['role']}</p>
-                    <div style="margin: 1rem 0;">
-                        <a href="mailto:{member['email']}" style="margin: 0 0.5rem;">✉️</a>
-                        <a href="{member['linkedin']}" style="margin: 0 0.5rem;">🔗</a>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+            <p style='color: var(--accent); margin: 1rem 0 0;'>Taux de succès: 92%</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-if __name__ == "__main__":
-    a_propos()
+    # Équipe Scientifique
+    st.markdown("<h1 class='section-title'>🧑🔬 Équipe de Recherche</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='team-grid'>", unsafe_allow_html=True)
+    cols = st.columns(3)
+    for member, col in zip(TEAM_MEMBERS, cols):
+        with col:
+            st.markdown(f"""
+            <div class='member-card'>
+                <div class='badge'>⭐ Expert</div>
+                <img src='{member["photo"]}' class='member-photo'>
+                <h3 style='margin: 0.5rem 0; color: var(--primary);'>{member['name']}</h3>
+                <p style='color: #6c757d; margin:0;'>{member['role']}</p>
+                <div style='margin: 1rem 0;'>
+                    <a href='mailto:{member['email']}' target='_blank' style='color: var(--primary); margin: 0 0.5rem;'>📧</a>
+                    <a href='{member['linkedin']}' target='_blank' style='color: var(--primary); margin: 0 0.5rem;'>🌐</a>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align: center; padding: 2rem 0; color: #6c757d;'>
+        <p>© 2024 Institut National de Gastro-Entérologie du Sénégal</p>
+        <div style='display: flex; justify-content: center; gap: 1rem;'>
+            <a href='#' style='color: var(--primary); text-decoration: none;'>Politique de Confidentialité</a>
+            <a href='#' style='color: var(--primary); text-decoration: none;'>Mentions Légales</a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
