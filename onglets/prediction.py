@@ -1,18 +1,13 @@
 import streamlit as st
 import numpy as np
-import pandas as pd
 import plotly.express as px
-import matplotlib.pyplot as plt
 from utils import FEATURE_CONFIG, encode_features, load_model, predict_survival, clean_prediction, save_new_patient, MODELS
-from io import BytesIO
-
-# 📌 Configuration de la page
-st.set_page_config(page_title="MED-AI - Prédiction en oncologie", page_icon="⚕️", layout="wide")
+from datetime import date
 
 def modelisation():
-    st.title("🤖 Prédiction de Survie en Oncologie Digestive")
+    st.title("🤖 Prédiction de Survie")
 
-    # 🩺 **Section 1 : Entrée des paramètres cliniques**
+    # 1️⃣ Prédiction personnalisée
     with st.expander("📋 Paramètres du patient", expanded=True):
         inputs = {}
         cols = st.columns(3)
@@ -25,30 +20,29 @@ def modelisation():
     
     input_df = encode_features(inputs)
     st.markdown("---")
-
-    # 🛠️ Vérification des données manquantes
+    
+    # Vérification de la présence de toutes les colonnes attendues
     missing_columns = [col for col in FEATURE_CONFIG.keys() if col not in input_df.columns]
     if missing_columns:
         st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
         return
     
-    # 🧠 **Sélection du modèle**
-    model_name = st.selectbox("Choisir un modèle de prédiction", list(MODELS.keys()))
+    # Choix du modèle pour la prédiction
+    model_name = st.selectbox("Choisir un modèle", list(MODELS.keys()))
     model = load_model(MODELS[model_name])
-
-    # 🔮 **Prédiction**
-    if st.button("🔍 Prédire le temps de survie"):
+    
+    # Zone de prédiction
+    cleaned_pred = None
+    if st.button("Prédire le temps de survie"):
         if model:
             try:
                 pred = predict_survival(model, input_df, model_name)
                 cleaned_pred = clean_prediction(pred, model_name)
                 if np.isnan(cleaned_pred):
                     raise ValueError("La prédiction renvoyée est NaN.")
+                st.metric(label="Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
                 
-                # 📊 **Affichage du résultat**
-                st.metric(label="📅 Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
-                
-                # 📉 **Courbe de survie**
+                # Visualisation graphique de la prédiction
                 months = min(int(cleaned_pred), 120)
                 fig = px.line(
                     x=list(range(months)),
@@ -57,56 +51,45 @@ def modelisation():
                     color_discrete_sequence=['#2ca02c']
                 )
                 st.plotly_chart(fig, use_container_width=True)
-
-                # 📂 **Téléchargement du rapport**
-                pdf_bytes = generate_report(cleaned_pred, input_df)
-                st.download_button(label="📄 Télécharger le rapport médical", data=pdf_bytes, file_name="rapport_medical.pdf", mime="application/pdf")
-
-                # 🔬 **Analyse avancée**
-                st.subheader("📊 Analyse des prédictions")
-                visualize_prediction_distribution()
-
             except Exception as e:
                 st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
-
-    # 📌 **Suivi thérapeutique**
+    
     st.markdown("---")
-    st.subheader("💊 Comparaison des Options Thérapeutiques")
-    with st.expander("📌 Sélectionnez une stratégie de traitement", expanded=False):
-        option = st.radio("Options disponibles :", ["Chimiothérapie", "Immunothérapie", "Traitement combiné"])
-        st.write(f"📌 Vous avez sélectionné : **{option}**")
-
-    # 📥 **Enregistrement du patient**
-    if st.button("💾 Enregistrer le patient"):
+    if st.button("Enregistrer le patient"):
         save_new_patient(input_df.iloc[0].to_dict())
-        st.success("✅ Données patient enregistrées avec succès.")
 
-# 📝 **Fonction pour générer un rapport médical PDF**
-def generate_report(prediction, patient_data):
-    from fpdf import FPDF
+    # 2️⃣ Analyse des résultats
+    st.subheader("Analyse des résultats")
+    if cleaned_pred is not None:
+        # Création d'un rapport médical simple
+        report_text = (
+            "=== Rapport Médical ===\n\n"
+            "Paramètres du patient :\n"
+            f"{input_df.to_dict(orient='records')[0]}\n\n"
+            f"Modèle choisi : {model_name}\n"
+            f"Survie médiane estimée : {cleaned_pred:.1f} mois\n\n"
+            "Ce rapport a été généré automatiquement par la plateforme MED-AI."
+        )
+        st.download_button(
+            label="Télécharger le rapport médical complet 📄",
+            data=report_text,
+            file_name="rapport_medical.txt",
+            mime="text/plain"
+        )
+    else:
+        st.info("Effectuez une prédiction pour générer et télécharger le rapport.")
 
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", style="B", size=16)
-    pdf.cell(200, 10, "Rapport Médical - Prédiction de Survie", ln=True, align="C")
+    st.markdown("---")
+    # 3️⃣ Suivi thérapeutique
+    st.subheader("Suivi thérapeutique")
+    # Option de comparaison des traitements
+    treatment_options = ["Chimiothérapie", "Radiothérapie", "Immunothérapie", "Thérapie ciblée"]
+    selected_treatments = st.multiselect("Comparez les différentes options de traitement 💊", options=treatment_options)
 
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, f"Survie médiane estimée : {prediction:.1f} mois", ln=True)
-    
-    pdf.cell(200, 10, "🔹 Paramètres du patient :", ln=True)
-    for key, value in patient_data.items():
-        pdf.cell(200, 10, f"- {key}: {value}", ln=True)
-    
-    pdf_output = BytesIO()
-    pdf.output(pdf_output)
-    return pdf_output.getvalue()
-
-# 📊 **Visualisation de la distribution des prédictions**
-def visualize_prediction_distribution():
-    data = np.random.normal(12, 5, 100)  # Génération de données fictives
-    fig, ax = plt.subplots()
-    ax.hist(data, bins=15, color='skyblue', edgecolor='black')
-    ax.set_xlabel("Temps de survie (mois)")
-    ax.set_ylabel("Nombre de patients")
-    ax.set_title("Distribution des prédictions de survie")
-    st.pyplot(fig)
+    # Planification du suivi médical automatisé
+    follow_up_date = st.date_input("Planifiez le suivi médical automatisé 🏥", value=date.today())
+    if st.button("Confirmer le suivi thérapeutique"):
+        if selected_treatments:
+            st.success(f"Suivi planifié pour le {follow_up_date} avec les traitements : {', '.join(selected_treatments)}")
+        else:
+            st.warning("Veuillez sélectionner au moins une option de traitement pour planifier le suivi.")
