@@ -5,131 +5,111 @@ from utils import LOGO_PATH  # Assurez-vous que LOGO_PATH est défini dans utils
 # CSS pour améliorer le design
 st.markdown("""
     <style>
-        /* Arrière-plan en mode full screen */
+        /* Arrière-plan avec un effet de parallax */
         .stApp {
             background: url('https://source.unsplash.com/1600x900/?medical,technology') no-repeat center center fixed;
             background-size: cover;
             font-family: 'Poppins', sans-serif;
+            position: relative;
+            height: 100vh;
         }
         
         /* Conteneur principal */
         .header-section {
             padding: 3rem 2rem;
             background: rgba(255, 255, 255, 0.85);
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
             margin: 2rem 0;
             text-align: center;
             animation: fadeIn 1.5s ease-in-out;
         }
 
-        /* Animation */
+        /* Animation d'apparition */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
+            from { opacity: 0; transform: translateY(-30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Titre stylé */
+        /* Titre créatif */
         .title-text {
             font-family: 'Poppins', sans-serif;
             color: #2e77d0;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
             font-size: 3.5rem;
-            font-weight: 700;
+            font-weight: bold;
+            animation: slideIn 1s ease-out;
         }
 
-        /* Sous-titre */
+        /* Animation du titre */
+        @keyframes slideIn {
+            from { transform: translateX(-30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Sous-titre avec effet de texte dégradé */
         .subtitle-text {
             color: #333;
             font-size: 1.5rem;
             margin-top: 1rem;
-            font-weight: 400;
-            line-height: 1.5;
+            font-weight: 300;
+            background: linear-gradient(90deg, #2e77d0, #6c757d);
+            -webkit-background-clip: text;
+            color: transparent;
         }
 
-        /* Séparateur dégradé */
+        /* Séparateur dégradé moderne */
         .separator {
             height: 5px;
-            background: linear-gradient(90deg, #2e77d0 0%, #6c757d 100%);
+            background: linear-gradient(90deg, #2e77d0, #6c757d);
             margin: 2rem auto;
             width: 60%;
-            border-radius: 2px;
+            border-radius: 50px;
         }
 
-        /* Style des expandeurs */
+        /* Expandeur interactif avec un design moderne */
         details summary {
             font-size: 1.3rem;
             font-weight: bold;
             color: #2e77d0;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        details summary:hover {
+            color: #1d5ba6;
         }
 
         /* Call-to-action button */
         .cta-button {
-            padding: 1rem 2.5rem;
+            padding: 1rem 2rem;
             background-color: #2e77d0;
             color: white;
             font-size: 1.3rem;
             border-radius: 30px;
             text-align: center;
-            margin-top: 30px;
+            margin-top: 20px;
             display: inline-block;
             text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
         }
 
         .cta-button:hover {
             background-color: #1d5ba6;
             cursor: pointer;
-            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .cta-button:active {
-            background-color: #154b7b;
-            transform: translateY(2px);
-        }
-
-        /* Effet de survol pour l'image du logo */
-        .logo-img:hover {
-            transform: scale(1.05);
-            transition: transform 0.3s ease-in-out;
-        }
-
-        /* Style de la section "Comment utiliser" */
-        .usage-section {
-            padding: 1.5rem;
-            background-color: rgba(255, 255, 255, 0.85);
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        /* Design du message d'encouragement */
+        .info-message {
+            background-color: #f7f7f7;
+            border-left: 5px solid #2e77d0;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
             margin-top: 2rem;
         }
 
-        .usage-section h4 {
-            font-size: 1.6rem;
-            font-weight: 600;
-            color: #2e77d0;
-        }
-
-        .usage-section ul {
-            margin-left: 1.5rem;
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-
-        .usage-section li {
-            color: #333;
-        }
-
-        /* Message d'encouragement */
-        .info-message {
-            background-color: #f1f8ff;
-            color: #2e77d0;
-            padding: 1rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -139,7 +119,7 @@ def accueil():
 
         with col1:
             if os.path.exists(LOGO_PATH):
-                st.image(LOGO_PATH, use_container_width=True, class_="logo-img")
+                st.image(LOGO_PATH, use_container_width=True)
 
         with col2:
             st.markdown('<div class="header-section">', unsafe_allow_html=True)
@@ -151,26 +131,18 @@ def accueil():
 
     with st.expander("🚀 Comment utiliser la plateforme ?", expanded=True):
         st.markdown("""
-        <div class="usage-section">
-            <h4>1️⃣ Prédiction personnalisée</h4>
-            <ul>
-                <li>Accédez à l'outil de prédiction via le menu latéral</li>
-                <li>Saisissez les paramètres cliniques du patient</li>
-            </ul>
+        **1️⃣ Prédiction personnalisée**  
+        - Accédez à l'outil de prédiction via le menu latéral  
+        - Saisissez les paramètres cliniques du patient  
 
-            <h4>2️⃣ Analyse des résultats</h4>
-            <ul>
-                <li>Visualisez les prédictions sous forme graphique 📊</li>
-                <li>Téléchargez le rapport médical complet 📄</li>
-            </ul>
+        **2️⃣ Analyse des résultats**  
+        - Visualisez les prédictions sous forme graphique 📊  
+        - Téléchargez le rapport médical complet 📄  
 
-            <h4>3️⃣ Suivi thérapeutique</h4>
-            <ul>
-                <li>Comparez les différentes options de traitement 💊</li>
-                <li>Planifiez le suivi médical automatisé 🏥</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        **3️⃣ Suivi thérapeutique**  
+        - Comparez les différentes options de traitement 💊  
+        - Planifiez le suivi médical automatisé 🏥  
+        """)
 
     st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
