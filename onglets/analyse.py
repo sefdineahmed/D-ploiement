@@ -18,6 +18,7 @@ def analyse_descriptive():
     st.markdown("---")
     
     # Calcul des statistiques de l'âge
+    df['Deces'] = df['Deces'].replace({'OUI': 1, 'NON': 0})
     AGE = df['AGE']  # Assurez-vous que la colonne AGE existe dans le DataFrame
     age_min = np.min(AGE)
     age_median = np.median(AGE)
