@@ -1,5 +1,5 @@
 def analyse_descriptive():
-    # CSS corrigé avec échappement correct
+    # Supprimer le 'f' devant la chaîne de caractères
     st.markdown("""
     <style>
         :root {
@@ -18,16 +18,9 @@ def analyse_descriptive():
             transition: transform 0.3s ease;
             border: 1px solid rgba(255,255,255,0.3);
         }
-        
-        .metric-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .section-title:before {
-            background: linear-gradient(to bottom, var(--primary), var(--secondary));
-        }
     </style>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)  # <-- Pas de 'f' ici
+
 
     st.title("🔮 Exploration des Données")
     df = load_data()
