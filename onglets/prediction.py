@@ -1,8 +1,35 @@
 import streamlit as st
 import numpy as np
 import plotly.express as px
-from utils import FEATURE_CONFIG, encode_features, load_model, predict_survival, clean_prediction, save_new_patient, MODELS
 from datetime import date
+from utils import FEATURE_CONFIG, encode_features, load_model, predict_survival, clean_prediction, save_new_patient, MODELS
+from fpdf import FPDF  # Assurez-vous que fpdf est installé : pip install fpdf
+
+def generate_pdf(report_data):
+    """
+    Génère un rapport PDF à partir d'un dictionnaire report_data.
+    """
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # En-tête du rapport
+    pdf.set_font("Arial", "B", 20)
+    pdf.cell(0, 15, "Rapport Médical", ln=True, align="C")
+    pdf.ln(10)
+    
+    # Corps du rapport
+    pdf.set_font("Arial", size=12)
+    for key, value in report_data.items():
+        pdf.multi_cell(0, 10, f"{key} : {value}")
+        pdf.ln(2)
+    
+    # Bas de page
+    pdf.ln(10)
+    pdf.set_font("Arial", "I", 10)
+    pdf.cell(0, 10, "Généré par la plateforme MED-AI", align="C")
+    
+    # Retourne le contenu PDF sous forme d'octets
+    return pdf.output(dest="S").encode("latin1")
 
 def modelisation():
     st.title("🤖 Prédiction de Survie")
@@ -61,20 +88,20 @@ def modelisation():
     # 2️⃣ Analyse des résultats
     st.subheader("Analyse des résultats")
     if cleaned_pred is not None:
-        # Création d'un rapport médical simple
-        report_text = (
-            "=== Rapport Médical ===\n\n"
-            "Paramètres du patient :\n"
-            f"{input_df.to_dict(orient='records')[0]}\n\n"
-            f"Modèle choisi : {model_name}\n"
-            f"Survie médiane estimée : {cleaned_pred:.1f} mois\n\n"
-            "Ce rapport a été généré automatiquement par la plateforme MED-AI."
-        )
+        # Création d'un rapport médical sous forme de dictionnaire
+        report_data = {
+            "Paramètres du patient": input_df.to_dict(orient='records')[0],
+            "Modèle choisi": model_name,
+            "Survie médiane estimée": f"{cleaned_pred:.1f} mois",
+            "Date du rapport": date.today().strftime("%d/%m/%Y")
+        }
+        # Générer le PDF
+        pdf_data = generate_pdf(report_data)
         st.download_button(
             label="Télécharger le rapport médical complet 📄",
-            data=report_text,
-            file_name="rapport_medical.txt",
-            mime="text/plain"
+            data=pdf_data,
+            file_name="rapport_medical.pdf",
+            mime="application/pdf"
         )
     else:
         st.info("Effectuez une prédiction pour générer et télécharger le rapport.")
@@ -82,11 +109,8 @@ def modelisation():
     st.markdown("---")
     # 3️⃣ Suivi thérapeutique
     st.subheader("Suivi thérapeutique")
-    # Option de comparaison des traitements
     treatment_options = ["Chimiothérapie", "Radiothérapie", "Immunothérapie", "Thérapie ciblée"]
     selected_treatments = st.multiselect("Comparez les différentes options de traitement 💊", options=treatment_options)
-
-    # Planification du suivi médical automatisé
     follow_up_date = st.date_input("Planifiez le suivi médical automatisé 🏥", value=date.today())
     if st.button("Confirmer le suivi thérapeutique"):
         if selected_treatments:
