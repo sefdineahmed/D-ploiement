@@ -13,6 +13,16 @@ def analyse_descriptive():
     if df.empty:
         return
 
+    # Vérification des valeurs manquantes et infinies
+    if df['Tempsdesuivi (Mois)'].isnull().any() or df['Deces'].isnull().any():
+        st.error("Des valeurs manquantes ont été détectées dans les colonnes 'Tempsdesuivi (Mois)' ou 'Deces'. Veuillez vérifier les données.")
+        df = df.dropna(subset=['Tempsdesuivi (Mois)', 'Deces'])  # Suppression des lignes avec NaN dans ces colonnes
+    
+    if np.isinf(df['Tempsdesuivi (Mois)']).any() or np.isinf(df['Deces']).any():
+        st.error("Des valeurs infinies ont été détectées dans les colonnes 'Tempsdesuivi (Mois)' ou 'Deces'. Veuillez vérifier les données.")
+        df = df.replace([np.inf, -np.inf], np.nan)  # Remplacer les valeurs infinies par NaN
+        df = df.dropna(subset=['Tempsdesuivi (Mois)', 'Deces'])  # Suppression des lignes avec NaN
+
     with st.expander("🔍 Aperçu des données brutes", expanded=True):
         st.dataframe(df.head(5))
         st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
