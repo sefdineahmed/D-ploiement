@@ -1,29 +1,34 @@
 import streamlit as st
 import smtplib
 import re
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv  # Pour stocker les infos sensibles
 
-# Paramètres SMTP (à configurer avec un vrai serveur)
-SMTP_SERVER = "smtp.gmail.com"  # Ex: smtp.gmail.com pour Gmail
+# Charger les variables d'environnement depuis un fichier .env
+load_dotenv()
+
+# Paramètres SMTP sécurisés (Remplacez avec votre configuration)
+SMTP_SERVER = "smtp.gmail.com"  # Exemple : Gmail
 SMTP_PORT = 587
-EMAIL_SENDER = "sefdine668@gmail.com"  # Remplacez par votre email d'envoi
-EMAIL_PASSWORD = "SEfd_1956"  # Remplacez par votre mot de passe (ou mot de passe d'application)
+EMAIL_SENDER = os.getenv("sefdine668@gmail.com")  # À stocker dans un .env ou `st.secrets`
+EMAIL_PASSWORD = os.getenv("SEfd_1956")  # Mot de passe d'application sécurisé
 
 def send_email(name, sender_email, message):
-    """Envoie un email via SMTP."""
+    """Envoie un email via SMTP de manière sécurisée."""
     recipient_email = "sefdine668@gmail.com"
-    
+
     msg = MIMEMultipart()
-    msg["From"] = sender_email
+    msg["From"] = EMAIL_SENDER
     msg["To"] = recipient_email
     msg["Subject"] = f"Nouveau message de {name}"
 
     body = f"""
-    Nom: {name}
-    Email: {sender_email}
-    
-    Message:
+    Nom : {name}
+    Email : {sender_email}
+
+    Message :
     {message}
     """
     msg.attach(MIMEText(body, "plain"))
@@ -32,7 +37,7 @@ def send_email(name, sender_email, message):
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
         server.starttls()
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-        server.sendmail(sender_email, recipient_email, msg.as_string())
+        server.sendmail(EMAIL_SENDER, recipient_email, msg.as_string())
         server.quit()
         return True
     except Exception as e:
@@ -40,21 +45,29 @@ def send_email(name, sender_email, message):
         return False
 
 def validate_email(email):
-    """Vérifie si l'email a un format valide."""
+    """Vérifie si l'email est valide."""
     pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     return re.match(pattern, email)
 
 def contact():
+    """Interface du formulaire de contact."""
     st.title("📩 Contactez-nous")
-    
+
+    # Style CSS
     st.markdown("""
     <style>
         .section {
-            background: linear-gradient(135deg, #ffffff, #f8f9fa);
-            padding: 2em;
+            background: linear-gradient(135deg, #f0f7ff, #ffffff);
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             font-family: 'Poppins', sans-serif;
+            text-align: center;
+        }
+        .contact-input {
+            border: 2px solid #2e77d0;
+            border-radius: 5px;
+            padding: 10px;
         }
         .btn-submit {
             background-color: #2e77d0;
@@ -72,9 +85,8 @@ def contact():
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown(
-        """
-        <div class="section">
+    st.markdown("""
+    <div class="section">
         <h4>📍 Localisation</h4>
         <p>Bambey, BP 13, Sénégal</p>
         
@@ -83,16 +95,15 @@ def contact():
         
         <h4>📩 Email</h4>
         <p>sefdine668@gmail.com</p>
-        </div>
-        """, unsafe_allow_html=True
-    )
+    </div>
+    """, unsafe_allow_html=True)
 
     with st.form("contact_form"):
-        name = st.text_input("Nom complet *", placeholder="Entrez votre nom")
-        email = st.text_input("Email *", placeholder="exemple@domaine.com")
-        message = st.text_area("Message *", placeholder="Écrivez votre message ici...")
+        name = st.text_input("Nom complet *", placeholder="Entrez votre nom", help="Votre nom est requis.")
+        email = st.text_input("Email *", placeholder="exemple@domaine.com", help="Votre email doit être valide.")
+        message = st.text_area("Message *", placeholder="Écrivez votre message ici...", help="Écrivez votre message.")
 
-        submit_button = st.form_submit_button("Envoyer", help="Cliquez pour envoyer le message")
+        submit_button = st.form_submit_button("Envoyer", help="Cliquez pour envoyer votre message")
 
         if submit_button:
             if not name or not email or not message:
