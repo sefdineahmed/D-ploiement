@@ -1,39 +1,66 @@
 import streamlit as st
 import numpy as np
 import plotly.express as px
-from utils import FEATURE_CONFIG, encode_features, load_model, predict_survival, clean_prediction, save_new_patient, MODELS
 from datetime import date
+import io
 from fpdf import FPDF
-from io import BytesIO
+from utils import FEATURE_CONFIG, encode_features, load_model, predict_survival, clean_prediction, save_new_patient, MODELS
 
-def generate_pdf(report_data):
+def generate_pdf_report(input_data, model_name, cleaned_pred):
     """
-    Génère un PDF à partir d'un dictionnaire contenant les informations du rapport.
+    Génère un rapport médical au format PDF avec un design personnalisé.
     """
+    # Création d'une instance FPDF
     pdf = FPDF()
     pdf.add_page()
+    
+    # Définition des polices et couleurs
+    pdf.set_font("Arial", 'B', 16)
+    pdf.set_text_color(34, 119, 208)  # bleu
+    
     # Titre du rapport
-    pdf.set_font("Arial", "B", 20)
-    pdf.cell(0, 10, "Rapport Médical", ln=True, align="C")
+    pdf.cell(0, 10, "Rapport Médical - Plateforme MED-AI", ln=True, align="C")
     pdf.ln(10)
     
-    # Contenu du rapport
-    pdf.set_font("Arial", "", 12)
-    for key, value in report_data.items():
-        pdf.set_text_color(50, 50, 50)
-        pdf.cell(0, 10, f"{key} : {value}", ln=True)
+    # Sous-titre et date
+    pdf.set_font("Arial", '', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 10, f"Date: {date.today().strftime('%d/%m/%Y')}", ln=True)
+    pdf.ln(5)
+    
+    # Section Paramètres du patient
+    pdf.set_font("Arial", 'B', 14)
+    pdf.set_text_color(34, 119, 208)
+    pdf.cell(0, 10, "Paramètres du patient :", ln=True)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", '', 12)
+    for key, value in input_data.items():
+        pdf.cell(0, 8, f"{FEATURE_CONFIG.get(key, key)} : {value}", ln=True)
+    pdf.ln(5)
+    
+    # Section du modèle et de la prédiction
+    pdf.set_font("Arial", 'B', 14)
+    pdf.set_text_color(34, 119, 208)
+    pdf.cell(0, 10, "Informations de prédiction :", ln=True)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", '', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 8, f"Modèle choisi : {model_name}", ln=True)
+    pdf.cell(0, 8, f"Survie médiane estimée : {cleaned_pred:.1f} mois", ln=True)
     pdf.ln(10)
     
-    # Message final
-    pdf.set_font("Arial", "I", 12)
-    pdf.set_text_color(100, 100, 100)
-    pdf.multi_cell(0, 10, "Ce rapport a été généré automatiquement par la plateforme MED-AI.\nMerci de votre confiance.")
+    # Note finale
+    pdf.set_font("Arial", 'I', 11)
+    pdf.cell(0, 8, "Ce rapport a été généré automatiquement par la plateforme MED-AI.", ln=True)
     
-    # Sortie dans un buffer BytesIO
-    pdf_output = BytesIO()
-    pdf_output.write(pdf.output(dest="S").encode("latin-1"))
-    pdf_output.seek(0)
-    return pdf_output
+    # Récupération du contenu PDF sous forme d'octets
+    pdf_buffer = io.BytesIO()
+    pdf.output(pdf_buffer)
+    pdf_bytes = pdf_buffer.getvalue()
+    pdf_buffer.close()
+    return pdf_bytes
 
 def modelisation():
     st.title("🤖 Prédiction de Survie")
@@ -92,16 +119,11 @@ def modelisation():
     # 2️⃣ Analyse des résultats
     st.subheader("Analyse des résultats")
     if cleaned_pred is not None:
-        # Préparation des données pour le rapport
-        report_data = {
-            "Paramètres du patient": input_df.to_dict(orient="records")[0],
-            "Modèle choisi": model_name,
-            "Survie médiane estimée": f"{cleaned_pred:.1f} mois"
-        }
-        pdf_report = generate_pdf(report_data)
+        # Génération du rapport PDF avec un design soigné
+        pdf_bytes = generate_pdf_report(input_df.to_dict(orient='records')[0], model_name, cleaned_pred)
         st.download_button(
-            label="Télécharger le rapport médical complet 📄",
-            data=pdf_report,
+            label="Télécharger le rapport médical complet (PDF) 📄",
+            data=pdf_bytes,
             file_name="rapport_medical.pdf",
             mime="application/pdf"
         )
