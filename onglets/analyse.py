@@ -1,70 +1,140 @@
-import streamlit as st
-import numpy as np
-import plotly.express as px
-from lifelines import KaplanMeierFitter
-from lifelines.statistics import logrank_test
-from utils import load_data
-from sklearn.preprocessing import LabelEncoder
-import matplotlib.pyplot as plt
-
 def analyse_descriptive():
-    st.title("📊 Analyse Exploratoire")
+    # Style CSS avancé
+    st.markdown(f"""
+        <style>
+            :root {{
+                --primary: #6366f1;
+                --secondary: #a855f7;
+                --glass: rgba(255, 255, 255, 0.9);
+            }}
+            
+            .metric-card {{
+                background: var(--glass);
+                backdrop-filter: blur(12px);
+                border-radius: 16px;
+                padding: 1.5rem;
+                box-shadow: 0 4px 24px -6px rgba(99, 102, 241, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                transition: transform 0.3s ease;
+            }}
+            
+            .metric-card:hover {{
+                transform: translateY(-5px);
+            }}
+            
+            .metric-value {{
+                font-size: 2.2rem;
+                font-weight: 800;
+                background: linear-gradient(45deg, var(--primary), var(--secondary));
+                -webkit-background-clip: text;
+                color: transparent;
+            }}
+            
+            .chart-header {{
+                font-size: 1.4rem;
+                font-weight: 600;
+                color: #2d3748;
+                margin-bottom: 1rem;
+                padding-left: 0.5rem;
+                border-left: 4px solid var(--primary);
+            }}
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.title("🔮 Exploration Analytique")
     df = load_data()
     if df.empty:
         return
 
-    # Affichage des premières lignes et dimensions du DataFrame
-    with st.expander("🔍 Aperçu des données brutes", expanded=True):
-        st.dataframe(df.head(5))
-        st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
+    # Section Aperçu des données
+    with st.container():
+        st.markdown("""
+            <div class='glass-container' style='margin-bottom: 2rem;'>
+                <h3 style='color: var(--primary); margin-bottom: 1.5rem;'>📦 Exploration des Données Brutes</h3>
+                <div style='max-height: 300px; overflow: auto; border-radius: 12px;'>
+        """, unsafe_allow_html=True)
+        st.dataframe(df.head(5).style.highlight_max(color='#f0f4ff'), use_container_width=True)
+        st.markdown("</div></div>", unsafe_allow_html=True)
         
-    st.markdown("---")
-    
-    # Calcul des statistiques de l'âge
-    AGE = df['AGE']  # Assurez-vous que la colonne AGE existe dans le DataFrame
-    age_min = np.min(AGE)
-    age_median = np.median(AGE)
-    age_max = np.max(AGE)
-
-    # Affichage dans trois colonnes
+    # Métriques Âge
+    AGE = df['AGE']
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.subheader("Âge minimum")
-        st.write(f"{age_min} ans")
+        st.markdown(f"""
+            <div class='metric-card'>
+                <div style='font-size: 1.1rem; color: #4a5568;'>🎯 Âge Minimum</div>
+                <div class='metric-value'>{np.min(AGE)}</div>
+                <div style='color: #718096; font-size: 0.9rem;'>ans</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
     with col2:
-        st.subheader("Âge médian")
-        st.write(f"{age_median} ans")
+        st.markdown(f"""
+            <div class='metric-card'>
+                <div style='font-size: 1.1rem; color: #4a5568;'>📌 Âge Médian</div>
+                <div class='metric-value'>{np.median(AGE):.1f}</div>
+                <div style='color: #718096; font-size: 0.9rem;'>ans</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
     with col3:
-        st.subheader("Âge maximum")
-        st.write(f"{age_max} ans")
+        st.markdown(f"""
+            <div class='metric-card'>
+                <div style='font-size: 1.1rem; color: #4a5568;'>🚀 Âge Maximum</div>
+                <div class='metric-value'>{np.max(AGE)}</div>
+                <div style='color: #718096; font-size: 0.9rem;'>ans</div>
+            </div>
+        """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
     
-    # Matrice de Corrélation et Histogramme de distribution
+    # Visualisations
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("📈 Distribution des variables")
-        selected_var = st.selectbox("Choisir une variable", df.columns)
-        fig_hist = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
-        st.plotly_chart(fig_hist, use_container_width=True)
-        
-    with col2:
-        st.subheader("🌡 Matrice de corrélation")
-        numeric_df = df.select_dtypes(include=["number"])
-        corr_matrix = numeric_df.corr()
-        fig_corr = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
-        
-        # Annotation des valeurs dans la matrice
-        for i in range(len(corr_matrix.columns)):
-            for j in range(len(corr_matrix.columns)):
-                fig_corr.add_annotation(
-                    x=j, 
-                    y=i, 
-                    text=f"{corr_matrix.iloc[i, j]:.3f}",
-                    showarrow=False,
-                    font=dict(size=10, color='white'),
-                    align='center'
+        with st.container():
+            st.markdown("<div class='chart-header'>📊 Distribution Dynamique</div>", unsafe_allow_html=True)
+            selected_var = st.selectbox("Choisir une variable", df.columns, key='var_select')
+            fig_hist = px.histogram(
+                df, 
+                x=selected_var, 
+                color_discrete_sequence=['#6366f1'],
+                nbins=30,
+                template='plotly_white',
+                marginal='rug'
+            )
+            fig_hist.update_layout(
+                plot_bgcolor='rgba(255,255,255,0.8)',
+                paper_bgcolor='rgba(255,255,255,0.5)',
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=14
                 )
-        st.plotly_chart(fig_corr, use_container_width=True)
+            )
+            st.plotly_chart(fig_hist, use_container_width=True)
+    
+    with col2:
+        with st.container():
+            st.markdown("<div class='chart-header'>🌐 Matrice de Corrélations</div>", unsafe_allow_html=True)
+            numeric_df = df.select_dtypes(include=["number"])
+            corr_matrix = numeric_df.corr()
+            
+            fig_corr = px.imshow(
+                corr_matrix,
+                color_continuous_scale='PuOr_r',
+                aspect='auto',
+                template='plotly_white'
+            )
+            
+            fig_corr.update_layout(
+                coloraxis_colorbar=dict(
+                    title='Corrélation',
+                    thickness=15,
+                    len=0.5
+                ),
+                xaxis=dict(tickangle=45),
+                margin=dict(l=0, r=0)
+            )
+            
+            st.plotly_chart(fig_corr, use_container_width=True)
     
     st.markdown("---")
