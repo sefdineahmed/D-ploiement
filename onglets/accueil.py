@@ -1,8 +1,11 @@
 import streamlit as st
 import os
 from utils import LOGO_PATH
+import streamlit as st
+import os
+from utils import LOGO_PATH
 
-# CSS personnalisé avec effets avancés
+# CSS personnalisé corrigé
 st.markdown(f"""
     <style>
         :root {{
@@ -17,9 +20,8 @@ st.markdown(f"""
             min-height: 100vh;
         }}
         
-        /* Effet verre sophistiqué */
         .glass-container {{
-            background: {var(--glass)}!important;
+            background: var(--glass)!important;
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-radius: 20px;
@@ -44,7 +46,6 @@ st.markdown(f"""
             z-index: -1;
         }}
         
-        /* Titre avec dégradé animé */
         @keyframes gradientAnimation {{
             0% {{ background-position: 0% 50%; }}
             50% {{ background-position: 100% 50%; }}
@@ -62,7 +63,6 @@ st.markdown(f"""
             font-size: 3.2rem;
         }}
         
-        /* Bouton holographique */
         .holographic-btn {{
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             color: white!important;
@@ -80,7 +80,6 @@ st.markdown(f"""
             box-shadow: 0 8px 32px -8px var(--primary);
         }}
         
-        /* Carte de fonctionnalité */
         .feature-card {{
             background: rgba(255, 255, 255, 0.7);
             padding: 1.5rem;
@@ -89,18 +88,9 @@ st.markdown(f"""
             transition: transform 0.3s ease;
         }}
         
-        .feature-card:hover {{
-            transform: translateY(-5px);
-        }}
-        
-        /* Animation d'entrée */
         @keyframes floatIn {{
             0% {{ opacity: 0; transform: translateY(20px); }}
             100% {{ opacity: 1; transform: translateY(0); }}
-        }}
-        
-        .animate-float {{
-            animation: floatIn 0.6s ease-out forwards;
         }}
     </style>
 """, unsafe_allow_html=True)
