@@ -1,33 +1,34 @@
+import streamlit as st
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import streamlit as st
 import re
 
-def send_email(name, email, message):
-    sender_email = "votre_email@example.com"  # Remplacez par votre email (celui qui envoie l'email)
-    receiver_email = "ahmed.sefdine@uadb.edu.sn"  # Destinataire
-
-    # Créez le message
-    msg = MIMEMultipart()
-    msg["From"] = sender_email
-    msg["To"] = receiver_email
-    msg["Subject"] = f"Message de {name} via le formulaire de contact"
-
-    body = f"Nom: {name}\nEmail: {email}\nMessage:\n{message}"
-    msg.attach(MIMEText(body, "plain"))
-
-    # Connexion au serveur SMTP pour envoyer l'email
+def envoyer_email(subject, body, to_email):
     try:
-        with smtplib.SMTP("smtp.example.com", 587) as server:  # Remplacez par le serveur SMTP de votre fournisseur
-            server.starttls()  # Sécurisation de la connexion
-            server.login("votre_email@example.com", "votre_mot_de_passe")  # Connexion avec vos identifiants
-            text = msg.as_string()
-            server.sendmail(sender_email, receiver_email, text)  # Envoi de l'email
-        return True
+        # Paramètres d'authentification SMTP
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        sender_email = "votre_email@gmail.com"  # Remplacez par votre adresse email
+        sender_password = "votre_mot_de_passe"  # Remplacez par votre mot de passe ou utilisez un mot de passe d'application
+
+        # Créer l'objet MIMEMultipart
+        message = MIMEMultipart()
+        message["From"] = sender_email
+        message["To"] = to_email
+        message["Subject"] = subject
+
+        # Ajouter le corps du message
+        message.attach(MIMEText(body, "plain"))
+
+        # Connexion au serveur SMTP
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()  # Sécuriser la connexion
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, to_email, message.as_string())
+            st.success("✅ Message envoyé avec succès !")
     except Exception as e:
-        print(f"Erreur lors de l'envoi de l'email: {e}")
-        return False
+        st.error(f"Erreur lors de l'envoi de l'e-mail : {e}")
 
 def contact():
     st.title("📩 Contact")
@@ -103,8 +104,13 @@ def contact():
                 if not re.match(pattern, email):
                     st.error("Veuillez saisir un email valide.")
                 else:
+                    subject = f"Message de {name}"
+                    body = f"""
+                    Nom : {name}
+                    Email : {email}
+                    
+                    Message :
+                    {message}
+                    """
                     # Envoi de l'email
-                    if send_email(name, email, message):
-                        st.success("✅ Message envoyé avec succès !")
-                    else:
-                        st.error("❌ Une erreur est survenue lors de l'envoi de l'email.")
+                    envoyer_email(subject, body, "ahmed.sefdine@uadb.edu.sn")
