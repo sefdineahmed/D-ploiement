@@ -1,140 +1,130 @@
 def analyse_descriptive():
-    # Style CSS avancé corrigé
+    # CSS personnalisé
     st.markdown(f"""
-        <style>
-            :root {{
-                --primary: #6366f1;
-                --secondary: #a855f7;
-                --glass: rgba(255, 255, 255, 0.9);
-            }}
-            
-            .metric-card {{
-                background: var(--glass);
-                backdrop-filter: blur(12px);
-                border-radius: 16px;
-                padding: 1.5rem;
-                box-shadow: 0 4px 24px -6px rgba(99, 102, 241, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.4);
-                transition: transform 0.3s ease;
-            }}
-            
-            .metric-card:hover {{
-                transform: translateY(-5px);
-            }}
-            
-            .metric-value {{
-                font-size: 2.2rem;
-                font-weight: 800;
-                background: linear-gradient(45deg, var(--primary), var(--secondary));
-                -webkit-background-clip: text;
-                color: transparent;
-            }}
-            
-            .chart-header {{
-                font-size: 1.4rem;
-                font-weight: 600;
-                color: #2d3748;
-                margin-bottom: 1rem;
-                padding-left: 0.5rem;
-                border-left: 4px solid var(--primary);
-            }}
-        </style>
+    <style>
+        :root {{
+            --primary: #6366f1;
+            --secondary: #10b981;
+            --glass: rgba(255, 255, 255, 0.7);
+        }}
+        
+        .metric-card {{
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 0.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+        }}
+        
+        .metric-card:hover {{
+            transform: translateY(-5px);
+        }}
+        
+        .hover-plot {{
+            transition: all 0.3s ease;
+            border-radius: 16px;
+            overflow: hidden;
+        }}
+        
+        .hover-plot:hover {{
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }}
+        
+        .section-title {{
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }}
+        
+        .section-title:before {{
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 70%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }}
+    </style>
     """, unsafe_allow_html=True)
 
-    st.title("🔮 Exploration Analytique")
+    st.title("🔮 Exploration des Données")
     df = load_data()
     if df.empty:
         return
 
-    # Section Aperçu des données
-    with st.container():
-        st.markdown("""
-            <div class='glass-container' style='margin-bottom: 2rem;'>
-                <h3 style='color: var(--primary); margin-bottom: 1.5rem;'>📦 Exploration des Données Brutes</h3>
-                <div style='max-height: 300px; overflow: auto; border-radius: 12px;'>
-        """, unsafe_allow_html=True)
-        st.dataframe(df.head(5).style.highlight_max(color='#f0f4ff'), use_container_width=True)
-        st.markdown("</div></div>", unsafe_allow_html=True)
-        
-    # Métriques Âge
-    AGE = df['AGE']
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(f"""
-            <div class='metric-card'>
-                <div style='font-size: 1.1rem; color: #4a5568;'>🎯 Âge Minimum</div>
-                <div class='metric-value'>{np.min(AGE)}</div>
-                <div style='color: #718096; font-size: 0.9rem;'>ans</div>
-            </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f"""
-            <div class='metric-card'>
-                <div style='font-size: 1.1rem; color: #4a5568;'>📌 Âge Médian</div>
-                <div class='metric-value'>{np.median(AGE):.1f}</div>
-                <div style='color: #718096; font-size: 0.9rem;'>ans</div>
-            </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown(f"""
-            <div class='metric-card'>
-                <div style='font-size: 1.1rem; color: #4a5568;'>🚀 Âge Maximum</div>
-                <div class='metric-value'>{np.max(AGE)}</div>
-                <div style='color: #718096; font-size: 0.9rem;'>ans</div>
-            </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-    
-    # Visualisations
-    col1, col2 = st.columns(2)
-    with col1:
+    # Section aperçu des données
+    with st.expander("📂 Exploration des Données Brutes", expanded=True):
         with st.container():
-            st.markdown("<div class='chart-header'>📊 Distribution Dynamique</div>", unsafe_allow_html=True)
+            cols = st.columns([3, 1])
+            with cols[0]:
+                st.dataframe(df.head(5).style.background_gradient(cmap='Blues'), height=200)
+            with cols[1]:
+                st.metric("📊 Patients", df.shape[0])
+                st.metric("📈 Variables", df.shape[1])
+    
+    st.markdown("---")
+    
+    # Section métriques age
+    AGE = df['AGE']
+    stats = {
+        "🧒 Jeune": np.min(AGE),
+        "👨⚕️ Médian": np.median(AGE),
+        "🧓 Senior": np.max(AGE)
+    }
+    
+    with st.container():
+        st.markdown('<div class="section-title">Distribution d\'Âge</div>', unsafe_allow_html=True)
+        cols = st.columns(3)
+        for i, (title, value) in enumerate(stats.items()):
+            with cols[i]:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div style="font-size: 1.2rem; color: #6b7280; margin-bottom: 0.5rem;">{title}</div>
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">{value:.1f} ans</div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Section visualisations interactives
+    with st.container():
+        tabs = st.tabs(["📊 Distribution", "🌐 Corrélations"])
+        
+        with tabs[0]:
             selected_var = st.selectbox("Choisir une variable", df.columns, key='var_select')
             fig_hist = px.histogram(
                 df, 
                 x=selected_var, 
                 color_discrete_sequence=['#6366f1'],
-                nbins=30,
                 template='plotly_white',
-                marginal='rug'
-            )
-            fig_hist.update_layout(
-                plot_bgcolor='rgba(255,255,255,0.8)',
-                paper_bgcolor='rgba(255,255,255,0.5)',
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=14
-                )
-            )
+                labels={'count': 'Fréquence'},
+                title=f"Distribution de {selected_var}"
+            ).update_layout(height=400)
             st.plotly_chart(fig_hist, use_container_width=True)
-    
-    with col2:
-        with st.container():
-            st.markdown("<div class='chart-header'>🌐 Matrice de Corrélations</div>", unsafe_allow_html=True)
+        
+        with tabs[1]:
             numeric_df = df.select_dtypes(include=["number"])
             corr_matrix = numeric_df.corr()
-            
             fig_corr = px.imshow(
                 corr_matrix,
-                color_continuous_scale='PuOr_r',
-                aspect='auto',
-                template='plotly_white'
-            )
+                color_continuous_scale='Tealrose',
+                labels={'color': 'Corrélation'},
+                title="Matrice de Corrélation Interactive"
+            ).update_layout(height=500)
             
-            fig_corr.update_layout(
-                coloraxis_colorbar=dict(
-                    title='Corrélation',
-                    thickness=15,
-                    len=0.5
-                ),
-                xaxis=dict(tickangle=45),
-                margin=dict(l=0, r=0)
+            # Annotation dynamique
+            fig_corr.update_traces(
+                hovertemplate="<b>%{x}</b> vs <b>%{y}</b><br>Corrélation: %{z:.2f}<extra></extra>"
             )
-            
             st.plotly_chart(fig_corr, use_container_width=True)
     
     st.markdown("---")
