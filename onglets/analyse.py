@@ -1,14 +1,14 @@
 def analyse_descriptive():
-    # CSS personnalisé
-    st.markdown(f"""
+    # CSS corrigé avec échappement correct
+    st.markdown("""
     <style>
-        :root {{
+        :root {
             --primary: #6366f1;
             --secondary: #10b981;
             --glass: rgba(255, 255, 255, 0.7);
-        }}
+        }
         
-        .metric-card {{
+        .metric-card {
             background: var(--glass);
             backdrop-filter: blur(12px);
             border-radius: 16px;
@@ -17,42 +17,15 @@ def analyse_descriptive():
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
             transition: transform 0.3s ease;
             border: 1px solid rgba(255,255,255,0.3);
-        }}
+        }
         
-        .metric-card:hover {{
+        .metric-card:hover {
             transform: translateY(-5px);
-        }}
+        }
         
-        .hover-plot {{
-            transition: all 0.3s ease;
-            border-radius: 16px;
-            overflow: hidden;
-        }}
-        
-        .hover-plot:hover {{
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }}
-        
-        .section-title {{
-            font-family: 'Inter', sans-serif;
-            color: #1f2937;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            position: relative;
-            padding-left: 1.5rem;
-        }}
-        
-        .section-title:before {{
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 4px;
-            height: 70%;
+        .section-title:before {
             background: linear-gradient(to bottom, var(--primary), var(--secondary));
-            border-radius: 2px;
-        }}
+        }
     </style>
     """, unsafe_allow_html=True)
 
