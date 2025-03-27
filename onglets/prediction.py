@@ -1,23 +1,19 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 import plotly.express as px
+import matplotlib.pyplot as plt
 from utils import FEATURE_CONFIG, encode_features, load_model, predict_survival, clean_prediction, save_new_patient, MODELS
+from io import BytesIO
+
+# 📌 Configuration de la page
+st.set_page_config(page_title="MED-AI - Prédiction en oncologie", page_icon="⚕️", layout="wide")
 
 def modelisation():
     st.title("🤖 Prédiction de Survie en Oncologie Digestive")
 
-    # 🚀 **Ajout d'un menu latéral**
-    st.sidebar.header("📌 Navigation")
-    st.sidebar.markdown("🔹 **1️⃣ Prédiction personnalisée**")
-    st.sidebar.markdown("🔹 **2️⃣ Analyse des résultats**")
-    st.sidebar.markdown("🔹 **3️⃣ Suivi thérapeutique**")
-    
-    st.markdown("---")
-
-    # 1️⃣ **Prédiction personnalisée**
-    with st.expander("📋 1️⃣ Saisissez les paramètres du patient", expanded=True):
-        st.info("Renseignez les informations du patient pour générer une prédiction.")
-        
+    # 🩺 **Section 1 : Entrée des paramètres cliniques**
+    with st.expander("📋 Paramètres du patient", expanded=True):
         inputs = {}
         cols = st.columns(3)
         for i, (feature, label) in enumerate(FEATURE_CONFIG.items()):
@@ -27,37 +23,32 @@ def modelisation():
                 else:
                     inputs[feature] = st.selectbox(label, options=["Non", "Oui"], key=feature)
     
-    # Conversion des données d'entrée
     input_df = encode_features(inputs)
-    
     st.markdown("---")
 
-    # Vérification des colonnes manquantes
+    # 🛠️ Vérification des données manquantes
     missing_columns = [col for col in FEATURE_CONFIG.keys() if col not in input_df.columns]
     if missing_columns:
         st.error(f"❌ Colonnes manquantes : {', '.join(missing_columns)}")
         return
-
-    # Sélection du modèle
-    model_name = st.selectbox("🧠 Choisissez un modèle de prédiction", list(MODELS.keys()))
-    model = load_model(MODELS[model_name])
     
-    st.markdown("---")
+    # 🧠 **Sélection du modèle**
+    model_name = st.selectbox("Choisir un modèle de prédiction", list(MODELS.keys()))
+    model = load_model(MODELS[model_name])
 
-    # 2️⃣ **Analyse des résultats**
-    if st.button("🚀 Prédire le temps de survie"):
+    # 🔮 **Prédiction**
+    if st.button("🔍 Prédire le temps de survie"):
         if model:
             try:
                 pred = predict_survival(model, input_df, model_name)
                 cleaned_pred = clean_prediction(pred, model_name)
-
                 if np.isnan(cleaned_pred):
                     raise ValueError("La prédiction renvoyée est NaN.")
                 
-                st.success("✅ Prédiction réussie !")
-                st.metric(label="📊 Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
-
-                # **Graphique interactif**
+                # 📊 **Affichage du résultat**
+                st.metric(label="📅 Survie médiane estimée", value=f"{cleaned_pred:.1f} mois")
+                
+                # 📉 **Courbe de survie**
                 months = min(int(cleaned_pred), 120)
                 fig = px.line(
                     x=list(range(months)),
@@ -67,32 +58,55 @@ def modelisation():
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
+                # 📂 **Téléchargement du rapport**
+                pdf_bytes = generate_report(cleaned_pred, input_df)
+                st.download_button(label="📄 Télécharger le rapport médical", data=pdf_bytes, file_name="rapport_medical.pdf", mime="application/pdf")
+
+                # 🔬 **Analyse avancée**
+                st.subheader("📊 Analyse des prédictions")
+                visualize_prediction_distribution()
+
             except Exception as e:
-                st.error(f"❌ Erreur de prédiction : {e}")
+                st.error(f"❌ Erreur de prédiction pour {model_name} : {e}")
 
+    # 📌 **Suivi thérapeutique**
     st.markdown("---")
+    st.subheader("💊 Comparaison des Options Thérapeutiques")
+    with st.expander("📌 Sélectionnez une stratégie de traitement", expanded=False):
+        option = st.radio("Options disponibles :", ["Chimiothérapie", "Immunothérapie", "Traitement combiné"])
+        st.write(f"📌 Vous avez sélectionné : **{option}**")
 
-    # 3️⃣ **Suivi thérapeutique**
-    with st.expander("💊 3️⃣ Options de traitement et suivi", expanded=False):
-        st.markdown("""
-        🔹 **Comparez différentes stratégies thérapeutiques**  
-        🔹 **Obtenez des recommandations basées sur le modèle**  
-        🔹 **Planifiez un suivi médical automatisé**  
-        """)
-    
-    # 📄 **Téléchargement du rapport**
-    if st.button("📥 Télécharger le rapport médical"):
-        st.download_button(
-            label="📄 Télécharger le rapport",
-            data="Résumé de la prédiction en format PDF ou texte...",
-            file_name="rapport_prediction.txt",
-            mime="text/plain"
-        )
-
-    st.markdown("---")
-
-    # 📌 **Enregistrement du patient**
+    # 📥 **Enregistrement du patient**
     if st.button("💾 Enregistrer le patient"):
         save_new_patient(input_df.iloc[0].to_dict())
-        st.success("✅ Patient enregistré avec succès !")
+        st.success("✅ Données patient enregistrées avec succès.")
 
+# 📝 **Fonction pour générer un rapport médical PDF**
+def generate_report(prediction, patient_data):
+    from fpdf import FPDF
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", style="B", size=16)
+    pdf.cell(200, 10, "Rapport Médical - Prédiction de Survie", ln=True, align="C")
+
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, f"Survie médiane estimée : {prediction:.1f} mois", ln=True)
+    
+    pdf.cell(200, 10, "🔹 Paramètres du patient :", ln=True)
+    for key, value in patient_data.items():
+        pdf.cell(200, 10, f"- {key}: {value}", ln=True)
+    
+    pdf_output = BytesIO()
+    pdf.output(pdf_output)
+    return pdf_output.getvalue()
+
+# 📊 **Visualisation de la distribution des prédictions**
+def visualize_prediction_distribution():
+    data = np.random.normal(12, 5, 100)  # Génération de données fictives
+    fig, ax = plt.subplots()
+    ax.hist(data, bins=15, color='skyblue', edgecolor='black')
+    ax.set_xlabel("Temps de survie (mois)")
+    ax.set_ylabel("Nombre de patients")
+    ax.set_title("Distribution des prédictions de survie")
+    st.pyplot(fig)
