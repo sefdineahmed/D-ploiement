@@ -21,3 +21,6 @@ openpyxl
 scikit-learn
 scikit-survival
 plotly
+Pillow
+fpdf2
+
