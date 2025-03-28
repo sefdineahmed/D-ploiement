@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 from utils import TEAM_MEMBERS, TEAM_IMG_PATH
 
@@ -153,48 +152,47 @@ def protocol_diagnostic():
             </div>
             """, unsafe_allow_html=True)
 
-
-
-            # Section Équipe Scientifique Corrigée
-            st.markdown("<h2 class='section-title' style='text-align: center;'>Comité Scientifique</h2>", unsafe_allow_html=True)
             
-            cols = st.columns(len(TEAM_MEMBERS))
-            for member, col in zip(TEAM_MEMBERS, cols):
-                with col:
-                    try:
-                        # Construction du chemin absolu
-                        current_dir = os.path.dirname(__file__)
-                        photo_path = os.path.join(current_dir, member['photo'])
-                        
-                        if not os.path.exists(photo_path):
-                            raise FileNotFoundError(f"Fichier introuvable: {photo_path}")
-                        
-                        st.markdown(f"""
-                        <div class="team-card">
-                            <img src="{photo_path}" alt="{member['name']}">
-                            <h3 style="margin: 0.5rem 0;">{member['name']}</h3>
-                            <p style="color: #4b5563; font-size: 0.9em;">{member['role']}</p>
-                            <p style="color: var(--primary); font-weight: 500;">{member['Etablissement']}</p>
-                            <div style="margin: 1rem 0;">
-                                <a href="mailto:{member['email']}" target="_blank" style="margin: 0 0.5rem; color: var(--primary);">✉️</a>
-                                <a href="{member['linkedin']}" target="_blank" style="margin: 0 0.5rem; color: var(--primary);">🔗</a>
+                # Section Équipe Scientifique corrigée
+                st.markdown("<h2 class='section-title' style='text-align: center;'>Comité Scientifique</h2>", unsafe_allow_html=True)
+                
+                cols = st.columns(len(TEAM_MEMBERS))
+                for member, col in zip(TEAM_MEMBERS, cols):
+                    with col:
+                        try:
+                            # Chemin corrigé depuis la racine du projet
+                            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                            photo_path = os.path.join(base_dir, member['photo'])
+                            
+                            if not os.path.exists(photo_path):
+                                raise FileNotFoundError(f"Fichier introuvable: {photo_path}")
+                            
+                            st.markdown(f"""
+                            <div class="team-card">
+                                <img src="{photo_path}" alt="{member['name']}">
+                                <h3 style="margin: 0.5rem 0;">{member['name']}</h3>
+                                <p style="color: #4b5563; font-size: 0.9em;">{member['role']}</p>
+                                <p style="color: var(--primary); font-weight: 500;">{member['Etablissement']}</p>
+                                <div style="margin: 1rem 0;">
+                                    <a href="mailto:{member['email']}" target="_blank" style="margin: 0 0.5rem; color: var(--primary);">✉️</a>
+                                    <a href="{member['linkedin']}" target="_blank" style="margin: 0 0.5rem; color: var(--primary);">🔗</a>
+                                </div>
                             </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(f"Erreur de chargement du profil: {str(e)}")
-                        st.markdown(f"""
-                        <div class="team-card">
-                            <div style="text-align: center; padding: 1rem;">
-                                <div style="width: 120px; height: 120px; background: #f0f0f0; border-radius: 50%; margin: 0 auto 1rem;"></div>
-                                <h3>{member['name']}</h3>
-                                <p>{member['role']}</p>
-                                <p>{member['Etablissement']}</p>
+                            """, unsafe_allow_html=True)
+                        except Exception as e:
+                            st.error(f"Erreur de chargement du profil: {str(e)}")
+                            st.markdown(f"""
+                            <div class="team-card">
+                                <div style="text-align: center; padding: 1rem;">
+                                    <div style="width: 120px; height: 120px; background: #f0f0f0; border-radius: 50%; margin: 0 auto 1rem;"></div>
+                                    <h3>{member['name']}</h3>
+                                    <p>{member['role']}</p>
+                                    <p>{member['Etablissement']}</p>
+                                </div>
                             </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-        
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        if __name__ == "__main__":
-            a_propos()
+                            """, unsafe_allow_html=True)
+            
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            if __name__ == "__main__":
+                a_propos()
