@@ -4,67 +4,164 @@ import plotly.express as px
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
 from utils import load_data
-from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 
+# Configuration du style CSS
+st.markdown("""
+<style>
+    :root {
+        --primary: #2e77d0;
+        --secondary: #1d5ba6;
+        --accent: #22d3ee;
+    }
+    
+    .section-title {
+        color: var(--primary);
+        border-bottom: 3px solid var(--primary);
+        padding-bottom: 0.5rem;
+        margin: 2rem 0 !important;
+    }
+    
+    .metric-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .plot-container {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+    
+    .stSelectbox>div>div>select {
+        border: 2px solid var(--primary) !important;
+        border-radius: 8px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 def analyse_descriptive():
-    st.title("📊 Analyse Exploratoire")
+    st.title("📈 Analyse de Survie Oncologique")
     df = load_data()
     if df.empty:
         return
 
-    # Affichage des premières lignes et dimensions du DataFrame
-    with st.expander("🔍 Aperçu des données brutes", expanded=True):
-        st.dataframe(df.head(5))
-        st.write(f"Dimensions des données : {df.shape[0]} patients, {df.shape[1]} variables")
+    # Section d'en-tête avec statistiques clés
+    with st.container():
+        st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
         
+        with col1:
+            st.metric("Patients", f"{len(df):,}", help="Nombre total de patients dans l'étude")
+        with col2:
+            event_rate = df['Deces'].mean() * 100
+            st.metric("Taux de Décès", f"{event_rate:.1f}%", help="Pourcentage de décès observés")
+        with col3:
+            median_fu = df['Tempsdesuivi (Mois)'].median()
+            st.metric("Suivi Médian", f"{median_fu:.1f} mois", help="Durée médiane de suivi")
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+    
     st.markdown("---")
     
-    # Calcul des statistiques de l'âge
-    AGE = df['AGE']  # Assurez-vous que la colonne AGE existe dans le DataFrame
-    age_min = np.min(AGE)
-    age_median = np.median(AGE)
-    age_max = np.max(AGE)
+    # Analyse de survie avec courbe de Kaplan-Meier
+    with st.container():
+        st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
+        st.markdown("### 📉 Courbe de Survie de Kaplan-Meier")
+        
+        kmf = KaplanMeierFitter()
+        kmf.fit(df['Tempsdesuivi (Mois)'], df['Deces'])
+        
+        fig = px.line(
+            x=kmf.timeline,
+            y=kmf.survival_function_['KM_estimate'],
+            labels={'x': 'Mois de suivi', 'y': 'Probabilité de survie'},
+            color_discrete_sequence=['#2e77d0']
+        )
+        
+        fig.update_layout(
+            hovermode="x unified",
+            yaxis_tickformat=".0%",
+            xaxis_title="Temps de suivi (mois)",
+            yaxis_title="Probabilité de survie"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Analyse comparative par sous-groupes
+    with st.container():
+        st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
+        st.markdown("### 🔄 Analyse Comparative par Variable")
+        
+        analysis_var = st.selectbox("Sélectionnez une variable catégorielle", 
+                                  options=[col for col in df.columns if col not in ['Tempsdesuivi (Mois)', 'Deces']])
+        
+        if analysis_var:
+            groups = df[analysis_var].unique()
+            fig = px.ecdf(
+                df,
+                x="Tempsdesuivi (Mois)",
+                color=analysis_var,
+                ecdfnorm=None,
+                ecdfmode="complementary",
+                labels={'Tempsdesuivi (Mois)': 'Mois de suivi', 'ecdf': 'Probabilité de survie'}
+            )
+            
+            fig.update_layout(
+                yaxis_title="Probabilité de survie",
+                yaxis_tickformat=".0%",
+                legend_title=analysis_var
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Test du log-rank
+            results = logrank_test(
+                df['Tempsdesuivi (Mois)'][df[analysis_var] == groups[0]],
+                df['Tempsdesuivi (Mois)'][df[analysis_var] == groups[1]],
+                df['Deces'][df[analysis_var] == groups[0]],
+                df['Deces'][df[analysis_var] == groups[1]]
+            )
+            st.markdown(f"""
+                **Résultat du test du log-rank**  
+                p-value = {results.p_value:.4f}  
+                Statistique de test = {results.test_statistic:.2f}
+            """)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Section d'analyse descriptive
+    with st.container():
+        st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("### 📊 Distribution des Variables")
+            dist_var = st.selectbox("Choisir une variable", df.columns)
+            fig = px.histogram(df, x=dist_var, color_discrete_sequence=['#2e77d0'])
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### 🌡 Matrice de Corrélation")
+            numeric_df = df.select_dtypes(include=["number"])
+            corr_matrix = numeric_df.corr()
+            fig = px.imshow(
+                corr_matrix,
+                color_continuous_scale='RdBu_r',
+                labels=dict(color="Corrélation"),
+                zmin=-1,
+                zmax=1
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # Affichage dans trois colonnes
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.subheader("Âge minimum")
-        st.write(f"{age_min} ans")
-    with col2:
-        st.subheader("Âge médian")
-        st.write(f"{age_median} ans")
-    with col3:
-        st.subheader("Âge maximum")
-        st.write(f"{age_max} ans")
-    
-    st.markdown("---")
-    
-    # Matrice de Corrélation et Histogramme de distribution
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("📈 Distribution des variables")
-        selected_var = st.selectbox("Choisir une variable", df.columns)
-        fig_hist = px.histogram(df, x=selected_var, color_discrete_sequence=['#1f77b4'])
-        st.plotly_chart(fig_hist, use_container_width=True)
-        
-    with col2:
-        st.subheader("🌡 Matrice de corrélation")
-        numeric_df = df.select_dtypes(include=["number"])
-        corr_matrix = numeric_df.corr()
-        fig_corr = px.imshow(corr_matrix, color_continuous_scale='RdBu_r', labels={"color": "Corrélation"})
-        
-        # Annotation des valeurs dans la matrice
-        for i in range(len(corr_matrix.columns)):
-            for j in range(len(corr_matrix.columns)):
-                fig_corr.add_annotation(
-                    x=j, 
-                    y=i, 
-                    text=f"{corr_matrix.iloc[i, j]:.3f}",
-                    showarrow=False,
-                    font=dict(size=10, color='white'),
-                    align='center'
-                )
-        st.plotly_chart(fig_corr, use_container_width=True)
-    
-    st.markdown("---")
+if __name__ == "__main__":
+    analyse_descriptive()
