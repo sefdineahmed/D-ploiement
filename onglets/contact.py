@@ -151,25 +151,25 @@ def contact():
             # Carte interactive
             st.map(latitude=14.716677, longitude=-17.467686, zoom=12)
         
-        # Section équipe
-        st.markdown("---")
-        st.subheader("👥 Équipe de Support")
-        t_cols = st.columns(3)
-        team = [
-            {"name": "Dr. Alioune Ndiaye", "role": "Support Technique", "email": "tech@medai.sn"},
-            {"name": "Aminata Diop", "role": "Service Clients", "email": "client@medai.sn"},
-            {"name": "Moussa Fall", "role": "Développement", "email": "dev@medai.sn"}
-        ]
-        
-        for col, member in zip(t_cols, team):
-            with col:
-                st.markdown(f"""
-                <div class="team-card">
-                    <h4>{member['name']}</h4>
-                    <p style="color: {var(--primary)};">{member['role']}</p>
-                    <a href="mailto:{member['email']}" style="color: {var(--secondary)};">✉️ Contact</a>
-                </div>
-                """, unsafe_allow_html=True)
+# Section Équipe corrigée
+st.markdown("---")
+st.subheader("👥 Équipe de Support")
+t_cols = st.columns(3)
+team = [
+    {"name": "Dr. Alioune Ndiaye", "role": "Support Technique", "email": "tech@medai.sn"},
+    {"name": "Aminata Diop", "role": "Service Clients", "email": "client@medai.sn"},
+    {"name": "Moussa Fall", "role": "Développement", "email": "dev@medai.sn"}
+]
+
+for col, member in zip(t_cols, team):
+    with col:
+        st.markdown(f"""
+        <div class="team-card">
+            <h4>{member['name']}</h4>
+            <p style="color: var(--primary);">{member['role']}</p>
+            <a href="mailto:{member['email']}" style="color: var(--secondary);">✉️ Contact</a>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Section FAQ
         st.markdown("---")
