@@ -183,45 +183,45 @@ def contact():
                 st.markdown("</div>", unsafe_allow_html=True)
 
         with col_info:
-            st.markdown("""
-            <div class='contact-card' style="padding: 2rem;">
-                <h3 style="color: var(--primary); margin-bottom: 1.5rem;">📌 Coordonnées</h3>
-                
-                <div style="margin-bottom: 2rem;">
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-                        <div style="font-size: 2rem;">🏥</div>
-                        <div>
-                            <h4 style="margin: 0; color: var(--secondary);">Adresse Clinique</h4>
-                            <p style="margin: 0.5rem 0 0; color: #666;">
-                                Tour Médicale, 15ème étage<br>
-                                Corniche Ouest, Dakar<br>
-                                Sénégal
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-                        <div style="font-size: 2rem;">📞</div>
-                        <div>
-                            <h4 style="margin: 0; color: var(--secondary);">Support Téléphonique</h4>
-                            <p style="margin: 0.5rem 0 0; color: #666;">
-                                +221 33 800 70 70<br>
-                                Disponible 24h/24
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div style="border-top: 2px solid #eee; padding-top: 1.5rem;">
-                        <h4 style="color: var(--secondary); margin-bottom: 1rem;">🔗 Réseaux Sociaux</h4>
-                        <div style="display: flex; gap: 1.5rem; font-size: 1.8rem;">
-                            <a href="#" style="color: var(--primary);">🌐</a>
-                            <a href="#" style="color: var(--primary);">💼</a>
-                            <a href="#" style="color: var(--primary);">📘</a>
-                        </div>
-                    </div>
+           st.markdown('''
+    <div class='contact-card' style="padding: 2rem;">
+        <h3 style="color: var(--primary); margin-bottom: 1.5rem;">📌 Coordonnées</h3>
+        
+        <div style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="font-size: 2rem;">🏥</div>
+                <div>
+                    <h4 style="margin: 0; color: var(--secondary);">Adresse Clinique</h4>
+                    <p style="margin: 0.5rem 0 0; color: #666;">
+                        Tour Médicale, 15ème étage<br>
+                        Corniche Ouest, Dakar<br>
+                        Sénégal
+                    </p>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="font-size: 2rem;">📞</div>
+                <div>
+                    <h4 style="margin: 0; color: var(--secondary);">Support Téléphonique</h4>
+                    <p style="margin: 0.5rem 0 0; color: #666;">
+                        +221 33 800 70 70<br>
+                        Disponible 24h/24
+                    </p>
+                </div>
+            </div>
+            
+            <div style="border-top: 2px solid #eee; padding-top: 1.5rem;">
+                <h4 style="color: var(--secondary); margin-bottom: 1rem;">🔗 Réseaux Sociaux</h4>
+                <div style="display: flex; gap: 1.5rem; font-size: 1.8rem;">
+                    <a href="#" style="color: var(--primary);">🌐</a>
+                    <a href="#" style="color: var(--primary);">💼</a>
+                    <a href="#" style="color: var(--primary);">📘</a>
+                </div>
+            </div>
+        </div>
+    </div>
+''', unsafe_allow_html=True)
 
         # Traitement du formulaire
         if submitted:
