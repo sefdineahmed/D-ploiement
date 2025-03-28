@@ -51,6 +51,7 @@ FEATURE_CONFIG = {
 TEAM_MEMBERS = [
     {
         "name": "Pr. Aba Diop",
+        "Etablissement" : 'Université Alioune Diop de Bamby",
         "role": "Maître de Conférences",
         "email": "aba.diop@example.com",
         "linkedin": "https://linkedin.com/in/abadiop",
@@ -58,6 +59,7 @@ TEAM_MEMBERS = [
     },
     {
         "name": "PhD. Idrissa Sy",
+        "Etablissement" : 'Université Alioune Diop de Bamby",
         "role": "Enseignant Chercheur",
         "email": "idrissa.sy@example.com",
         "linkedin": "https://linkedin.com/in/idrissasy",
@@ -65,6 +67,7 @@ TEAM_MEMBERS = [
     },
     {
         "name": "M. Ahmed Sefdine",
+        "Etablissement" : 'Université Alioune Diop de Bamby",
         "role": "Étudiant",
         "email": "ahmed.sefdine@example.com",
         "linkedin": "https://linkedin.com/in/sefdineahmed",
