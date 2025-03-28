@@ -278,29 +278,40 @@ def protocol_diagnostic():
                 </div>
             </div>
             """, unsafe_allow_html=True)
-        
-        # Équipe scientifique
-        st.markdown("<h2 class='section-title' style='text-align: center;'>Équipe Scientifique</h2>", unsafe_allow_html=True)
-        st.markdown("<div class='team-grid'>", unsafe_allow_html=True)
-        for member in TEAM_MEMBERS:
-            if os.path.exists(member['photo']):
-                st.markdown(f"""
-                <div class="member-card">
-                    <img src="{member['photo']}" class="member-photo" alt="{member['name']}">
-                    <h3 style="margin: 0.5rem 0; color: var(--primary);">{member['name']}</h3>
-                    <p style="color: #64748b; margin: 0.5rem 0;">{member['role']}</p>
-                    <p style="color: #94a3b8; font-size: 0.9rem;">{member['Etablissement']}</p>
-                    <div style="margin: 1rem 0;">
-                        <a href="mailto:{member['email']}" style="margin: 0 0.5rem; color: var(--primary);">✉️ Email</a>
-                        <a href="{member['linkedin']}" style="margin: 0 0.5rem; color: var(--primary);">🌐 LinkedIn</a>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.error(f"Photo non trouvée pour {member['name']}")
-        st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("</div>", unsafe_allow_html=True)
+                    
 
-if __name__ == "__main__":
-    a_propos()
+            
+                # Équipe scientifique dans 3 colonnes
+                    st.markdown("<h2 class='section-title' style='text-align: center;'>Équipe Scientifique</h2>", unsafe_allow_html=True)
+                    
+                    cols = st.columns(3)
+                    for idx, member in enumerate(TEAM_MEMBERS):
+                        with cols[idx % 3]:
+                            if os.path.exists(member['photo']):
+                                st.markdown(f"""
+                                <div class="member-card">
+                                    <img src="{member['photo']}" class="member-photo" alt="Photo de {member['name']}">
+                                    <h3 style="margin: 0.5rem 0; color: var(--primary);">{member['name']}</h3>
+                                    <p style="color: #64748b; margin: 0.5rem 0; font-weight: 500;">{member['role']}</p>
+                                    <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">{member['Etablissement']}</p>
+                                    <div style="margin: 1rem 0;">
+                                        <a href="mailto:{member['email']}" 
+                                           style="margin: 0 0.5rem; 
+                                                  color: white; 
+                                                  background: var(--primary); 
+                                                  padding: 0.5rem 1rem; 
+                                                  border-radius: 8px; 
+                                                  text-decoration: none;">
+                                           ✉️ Contact
+                                        </a>
+                                    </div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                            else:
+                                st.error(f"Photo non trouvée : {member['photo']}")
+            
+                    st.markdown("</div>", unsafe_allow_html=True)
+            
+            if __name__ == "__main__":
+                a_propos()
