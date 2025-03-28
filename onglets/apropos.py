@@ -1,6 +1,3 @@
-import streamlit as st
-from utils import TEAM_MEMBERS, TEAM_IMG_PATH
-
 def a_propos():
     st.markdown(f"""
     <style>
@@ -84,15 +81,6 @@ def a_propos():
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }}
         
-        .team-card img {{
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 50%;
-            margin: 0 auto 1rem;
-            border: 3px solid var(--accent);
-        }}
-        
         .badge {{
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -168,8 +156,6 @@ def a_propos():
                 <div class="badge">Étude SEN-HPylori 2023</div>
             </div>
             """, unsafe_allow_html=True)
-        with col2:
-            st.image(TEAM_IMG_PATH, use_container_width=True)
         
         # Timeline d'infection
         st.markdown("<h2 class='section-title'>Processus Infectieux</h2>", unsafe_allow_html=True)
@@ -261,7 +247,6 @@ def protocol_diagnostic():
             with col:
                 st.markdown(f"""
                 <div class="team-card">
-                    <img src="{member['photo']}" alt="{member['name']}">
                     <h3 style="margin: 0.5rem 0;">{member['name']}</h3>
                     <p style="color: var(--primary); font-weight: 500;">{member['role']}</p>
                     <div style="margin: 1rem 0;">
