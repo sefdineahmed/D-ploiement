@@ -231,7 +231,7 @@ def contact():
                     <div>
                         <h4 style="margin: 0; color: var(--secondary);">Téléphone</h4>
                         <p style="margin: 0.3rem 0 0; color: #666;">
-                            +221 33 123 45 67<br>
+                            +221 77 808 09 42<br>
                             Urgences 24/7
                         </p>
                     </div>
