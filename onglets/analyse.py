@@ -50,31 +50,6 @@ def analyse_descriptive():
     
     st.markdown("---")
 
-    # Section 2: Analyse de Survie
-    st.markdown("<h2 class='section-title'>📈 Analyse de Survie Kaplan-Meier</h2>", unsafe_allow_html=True)
-    
-    kmf = KaplanMeierFitter()
-    kmf.fit(df["Tempsdesuivi (Mois)"], event_observed=df["Deces"])
-    
-    with st.container():
-        fig = px.line(
-            kmf.survival_function_,
-            x=kmf.survival_function_.index,
-            y='KM_estimate',
-            labels={'x': 'Mois de suivi', 'y': 'Probabilité de survie'},
-            color_discrete_sequence=['#2e77d0']
-        )
-        fig.update_layout(
-            hovermode="x unified",
-            title="Courbe de Survie Globale",
-            xaxis_title="Temps (mois)",
-            yaxis_title="Probabilité de Survie",
-            plot_bgcolor='rgba(240, 244, 254, 0.3)'
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    
-    st.markdown("---")
-
     # Section 3: Statistiques Descriptives
     st.markdown("<h2 class='section-title'>📋 Statistiques Démographiques</h2>", unsafe_allow_html=True)
     
