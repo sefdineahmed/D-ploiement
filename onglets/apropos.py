@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import TEAM_MEMBERS, TEAM_IMG_PATH
+from utils import TEAM_MEMBERS
 
 def a_propos():
     st.markdown(f"""
@@ -169,7 +169,6 @@ def a_propos():
             </div>
             """, unsafe_allow_html=True)
         with col2:
-            st.image(TEAM_IMG_PATH, use_container_width=True)
         
         # Timeline d'infection
         st.markdown("<h2 class='section-title'>Processus Infectieux</h2>", unsafe_allow_html=True)
@@ -254,18 +253,18 @@ def protocol_diagnostic():
             </div>
             """, unsafe_allow_html=True)
         
-# Remplacer la section de l'équipe scientifique par :
-st.markdown("<h2 class='section-title' style='text-align: center;'>Comité Scientifique</h2>", unsafe_allow_html=True)
+        # Équipe scientifique
+        st.markdown("<h2 class='section-title' style='text-align: center;'>Comité Scientifique</h2>", unsafe_allow_html=True)
 cols = st.columns(3)
 for member, col in zip(TEAM_MEMBERS, cols):
     with col:
         st.markdown(f"""
         <div class="team-card">
             <h3 style="margin: 0.5rem 0; color: var(--primary);">{member['name']}</h3>
-            <p style="color: #4b5563; font-weight: 500;">{member['role']}</p>
+            <p style="color: var(--secondary); font-weight: 500;">{member['role']}</p>
             <div style="margin: 1rem 0;">
-                <a href="mailto:{member['email']}" style="margin: 0 0.5rem; color: var(--secondary);">📧 Email</a>
-                <a href="{member['linkedin']}" style="margin: 0 0.5rem; color: var(--secondary);">🔗 LinkedIn</a>
+                <a href="mailto:{member['email']}" style="margin: 0 0.5rem; color: var(--accent);">✉️ Email</a>
+                <a href="{member['linkedin']}" style="margin: 0 0.5rem; color: var(--accent);">🔗 LinkedIn</a>
             </div>
         </div>
         """, unsafe_allow_html=True)
