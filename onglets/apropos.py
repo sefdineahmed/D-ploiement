@@ -174,32 +174,86 @@ def a_propos():
         """, unsafe_allow_html=True)
         
         # Protocoles cliniques
-        st.markdown("<h2 class='section-title'>Stratégies Cliniques</h2>", unsafe_allow_html=True)
-        tab1, tab2, tab3, tab4 = st.tabs(["Symptômes", "Diagnostic", "Traitement", "Prévention"])
-        
-        with tab2:
-            st.markdown("""
-            <div class="data-card">
-                <h3>Arbre Décisionnel Diagnostique</h3>
-                <div class="decision-tree">
-                    <div class="decision-node">
-                        <strong>Patient >50 ans ?</strong>
-                        <div style="margin-left: 1.5rem;">
-                            <p>✅ Oui → Endoscopie + Biopsie</p>
-                            <p>❌ Non → Test sérologique</p>
-                        </div>
-                    </div>
-                    <div style="text-align: center; margin: 0.5rem 0;">↓</div>
-                    <div class="decision-node">
-                        <strong>Résultat sérologique</strong>
-                        <div style="margin-left: 1.5rem;">
-                            <p>➕ Positif → Test respiratoire</p>
-                            <p>➖ Négatif → Suivi à 6 mois</p>
-                        </div>
-                    </div>
+st.markdown("<h2 class='section-title'>Stratégies Cliniques</h2>", unsafe_allow_html=True)
+tab1, tab2, tab3, tab4 = st.tabs(["Symptômes", "Diagnostic", "Traitement", "Prévention"])
+
+with tab1:
+    st.markdown("""
+    <div class="data-card">
+        <h3>Principaux Symptômes</h3>
+        <ul>
+            <li>Douleurs épigastriques récurrentes</li>
+            <li>Nausées post-prandiales</li>
+            <li>Perte de poids inexpliquée</li>
+            <li>Satiété précoce persistante</li>
+        </ul>
+        <div class="badge">Basé sur 1500 cas cliniques</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with tab2:
+    st.markdown("""
+    <div class="data-card">
+        <h3>Arbre Décisionnel Diagnostique</h3>
+        <div class="decision-tree">
+            <div class="decision-node">
+                <strong>Patient >50 ans ?</strong>
+                <div style="margin-left: 1.5rem;">
+                    <p>✅ Oui → Endoscopie + Biopsie</p>
+                    <p>❌ Non → Test sérologique</p>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            <div style="text-align: center; margin: 0.5rem 0;">↓</div>
+            <div class="decision-node">
+                <strong>Résultat sérologique</strong>
+                <div style="margin-left: 1.5rem;">
+                    <p>➕ Positif → Test respiratoire</p>
+                    <p>➖ Négatif → Suivi à 6 mois</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with tab3:
+    st.markdown("""
+    <div class="data-card">
+        <h3>Protocoles Thérapeutiques</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <div class="decision-node">
+                <h4>Première intention</h4>
+                <p>Triple thérapie (14 jours)</p>
+                <div class="badge">Efficacité 85%</div>
+            </div>
+            <div class="decision-node">
+                <h4>Résistances</h4>
+                <p>Quadrithérapie (10 jours)</p>
+                <div class="badge">Efficacité 92%</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with tab4:
+    st.markdown("""
+    <div class="data-card">
+        <h3>Mesures Préventives</h3>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+            <div class="decision-node">
+                <h4>🔬 Dépistage</h4>
+                <p>Campagnes de dépistage familial</p>
+            </div>
+            <div class="decision-node">
+                <h4>💧 Hygiène</h4>
+                <p>Traitement des sources d'eau</p>
+            </div>
+            <div class="decision-node">
+                <h4>📚 Éducation</h4>
+                <p>Programmes de sensibilisation</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
         
         # Équipe scientifique
         st.markdown("<h2 class='section-title'>Comité Scientifique</h2>", unsafe_allow_html=True)
