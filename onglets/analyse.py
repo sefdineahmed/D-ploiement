@@ -1,10 +1,13 @@
+import os
 import streamlit as st
 import pandas as pd
+import joblib
+import tensorflow as tf
 import numpy as np
 import plotly.express as px
-from utils import load_data
-changer moi le style et donne moi quelque chose très beaux a voir avec une professionnalisme 
-ajoute les bibliotheque necessaire
+from PIL import Image
+from lifelines import CoxPHFitter
+from tensorflow.keras.models import load_model as tf_load_model
 
 def analyse_descriptive():
     st.title("📊 Analyse Exploratoire")
