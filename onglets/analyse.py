@@ -2,161 +2,202 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.express as px
-from lifelines import KaplanMeierFitter
-from lifelines.statistics import logrank_test
-from utils import load_data
-from sklearn.preprocessing import LabelEncoder
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy import stats
+
+# Style CSS personnalisé
+st.markdown("""
+<style>
+    :root {
+        --primary: #2e77d0;
+        --secondary: #1d5ba6;
+        --accent: #22d3ee;
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #f8faff, #ffffff);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border-left: 4px solid var(--primary);
+        transition: transform 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .analysis-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+    }
+    
+    .stPlotlyChart {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 def analyse_descriptive():
-    # Style CSS personnalisé
-    st.markdown("""
-    <style>
-        :root {
-            --primary: #2e77d0;
-            --secondary: #1d5ba6;
-            --accent: #22d3ee;
-        }
-        
-        .header-card {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 2rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
-        }
-        
-        .metric-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-left: 4px solid var(--primary);
-            transition: transform 0.3s;
-        }
-        
-        .metric-card:hover {
-            transform: translateY(-3px);
-        }
-        
-        .viz-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
-            margin: 1rem 0;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<div class='header-card'><h1 style='color:white; margin:0;'>📈 Exploration des Données Médicales</h1></div>", unsafe_allow_html=True)
-    
+    st.title("🔍 Exploration des Données Médicales")
     df = load_data()
     if df.empty:
         return
 
     # Section Aperçu des données
-    with st.expander("🔍 Exploration des Données Brutes", expanded=True):
-        st.dataframe(df.head(8).style.highlight_max(color='#f0f4ff').highlight_min(color='#fff0f0')
-        st.caption(f"🔢 Dimensions du jeu de données : {df.shape[0]} patients | {df.shape[1]} variables")
-
+    with st.expander("📂 Aperçu du Jeu de Données", expanded=True):
+        st.markdown("""
+        <div class='analysis-section'>
+            <h3 style='color: var(--primary); margin-top: 0;'>Données Brutes</h3>
+            <div style='max-height: 300px; overflow: auto;'>
+        """, unsafe_allow_html=True)
+        st.dataframe(df.style.format(precision=2).highlight_null(color='#ffcccc')
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style='margin-top: 1rem; color: #666;'>
+            🔢 Dimensions : {df.shape[0]} patients × {df.shape[1]} variables
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
     st.markdown("---")
     
-    # Métriques d'âge
+    # Section Statistiques d'âge
     AGE = df['AGE']
     age_stats = {
-        "min": np.min(AGE),
-        "med": np.median(AGE),
-        "max": np.max(AGE)
+        'Min': np.min(AGE),
+        'Médiane': np.median(AGE),
+        'Max': np.max(AGE),
+        'Moyenne': np.mean(AGE),
+        'Écart-type': np.std(AGE)
     }
-
-    cols = st.columns(3)
-    stats_config = {
-        "min": {"title": "Âge Minimum", "icon": "👶", "color": "#22d3ee"},
-        "med": {"title": "Âge Médian", "icon": "🎯", "color": "#2e77d0"},
-        "max": {"title": "Âge Maximum", "icon": "👴", "color": "#1d5ba6"}
-    }
-
-    for (col, stat), key in zip(zip(cols, age_stats.values()), stats_config.keys()):
+    
+    cols = st.columns(5)
+    stats_icons = ['👶', '📊', '👴', '📐', '📈']
+    for (label, value), icon, col in zip(age_stats.items(), stats_icons, cols):
         with col:
             st.markdown(f"""
             <div class='metric-card'>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="font-size: 2rem; color: {stats_config[key]['color']};">{stats_config[key]['icon']}</div>
-                    <div>
-                        <h3 style="margin: 0; color: #6c757d;">{stats_config[key]['title']}</h3>
-                        <p style="font-size: 2rem; margin: 0; color: {stats_config[key]['color']};">{stat} ans</p>
-                    </div>
-                </div>
+                <div style='font-size: 2rem; margin-bottom: 0.5rem;'>{icon}</div>
+                <div style='color: var(--primary); font-weight: 600;'>{label}</div>
+                <div style='font-size: 1.5rem; color: #333;'>{value:.1f} ans</div>
             </div>
             """, unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # Analyse multivariée
-    col1, col2 = st.columns(2, gap="large")
+    # Section Analyse Univariée/Bivariée
+    col1, col2 = st.columns([1, 2])
     
     with col1:
         with st.container():
-            st.markdown("<div class='viz-card'>", unsafe_allow_html=True)
-            st.subheader("📊 Distribution des Variables")
+            st.markdown("<div class='analysis-section'>", unsafe_allow_html=True)
+            st.subheader("📌 Distribution des Variables")
+            
             selected_var = st.selectbox("Sélectionner une variable", df.columns, key='var_select')
             
-            fig = px.histogram(df, x=selected_var, 
-                             color_discrete_sequence=[var(--primary)], 
-                             nbins=20,
-                             template='plotly_white')
+            # Analyse de distribution
+            fig = make_subplots(rows=2, cols=1, 
+                               vertical_spacing=0.1,
+                               row_heights=[0.7, 0.3])
+            
+            # Histogramme
+            fig.add_trace(go.Histogram(
+                x=df[selected_var],
+                name='Distribution',
+                marker_color='#2e77d0',
+                opacity=0.8
+            ), row=1, col=1)
+            
+            # Boxplot
+            fig.add_trace(go.Box(
+                x=df[selected_var],
+                name='Distribution',
+                marker_color='#1d5ba6'
+            ), row=2, col=1)
             
             fig.update_layout(
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=14,
-                    font_family="Arial"
-                ),
-                xaxis_title_font=dict(size=14),
-                yaxis_title_font=dict(size=14)
+                height=500,
+                showlegend=False,
+                margin=dict(t=0, b=0),
+                plot_bgcolor='rgba(0,0,0,0)'
             )
-            
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
-
+    
     with col2:
         with st.container():
-            st.markdown("<div class='viz-card'>", unsafe_allow_html=True)
-            st.subheader("🌐 Matrice de Corrélation")
+            st.markdown("<div class='analysis-section'>", unsafe_allow_html=True)
+            st.subheader("🔗 Analyse des Corrélations")
+            
+            # Matrice de corrélation améliorée
             numeric_df = df.select_dtypes(include=["number"])
             corr_matrix = numeric_df.corr()
             
-            fig = px.imshow(corr_matrix,
-                          color_continuous_scale='RdBu',
-                          zmin=-1,
-                          zmax=1,
-                          labels=dict(color="Corrélation"),
-                          aspect="auto")
+            fig = go.Figure()
+            fig.add_trace(go.Heatmap(
+                z=corr_matrix,
+                x=corr_matrix.columns,
+                y=corr_matrix.columns,
+                colorscale='RdBu',
+                zmin=-1,
+                zmax=1,
+                hoverongaps=False,
+                text=np.round(corr_matrix.values, 2),
+                texttemplate="%{text}",
+                textfont={"size": 10}
+            )
             
-            fig.update_xaxes(side="top")
-            fig.update_layout(coloraxis_colorbar=dict(
-                title="Coefficient",
-                thickness=15,
-                len=0.5
-            ))
-            
-            # Ajout des annotations
-            annotations = []
-            for i, row in enumerate(corr_matrix.values):
-                for j, value in enumerate(row):
-                    annotations.append(
-                        dict(
-                            x=j,
-                            y=i,
-                            text=f"{value:.2f}",
-                            font=dict(color="white" if abs(value) > 0.5 else "black"),
-                            showarrow=False
-                        )
-                    )
-            fig.update_layout(annotations=annotations)
-            
+            fig.update_layout(
+                width=800,
+                height=600,
+                xaxis_showgrid=False,
+                yaxis_showgrid=False,
+                xaxis={'side': 'top'},
+                yaxis_autorange='reversed',
+                coloraxis_colorbar={
+                    'title': 'Coefficient',
+                    'tickvals': [-1, -0.5, 0, 0.5, 1]
+                }
+            )
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
-
+    
     st.markdown("---")
+    
+    # Section Analyse des valeurs manquantes
+    with st.expander("🔎 Analyse des Valeurs Manquantes", expanded=True):
+        st.markdown("<div class='analysis-section'>", unsafe_allow_html=True)
+        missing_data = df.isnull().sum().sort_values(ascending=False)
+        missing_percent = (missing_data / len(df)) * 100
+        
+        fig = px.bar(
+            x=missing_percent.index,
+            y=missing_percent.values,
+            labels={'x': 'Variables', 'y': 'Pourcentage (%)'},
+            color=missing_percent.values,
+            color_continuous_scale='Reds'
+        )
+        
+        fig.update_layout(
+            title='Répartition des Valeurs Manquantes par Variable',
+            xaxis_tickangle=45,
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+def load_data():
+    # Implémentez votre chargement de données ici
+    return pd.DataFrame()
+
+if __name__ == "__main__":
+    analyse_descriptive()
