@@ -66,7 +66,7 @@ st.markdown("""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_SENDER = "votre-email@gmail.com"
-EMAIL_PASSWORD = "SEFD_1956"  
+EMAIL_PASSWORD = "12_SEFD"  
 EMAIL_RECEIVER = "sefdine668@gmail.com"
 
 def send_email(name, sender_email, message):
@@ -151,25 +151,25 @@ def contact():
             # Carte interactive
             st.map(latitude=14.716677, longitude=-17.467686, zoom=12)
         
-# Section Équipe corrigée
-st.markdown("---")
-st.subheader("👥 Équipe de Support")
-t_cols = st.columns(3)
-team = [
-    {"name": "Dr. Alioune Ndiaye", "role": "Support Technique", "email": "tech@medai.sn"},
-    {"name": "Aminata Diop", "role": "Service Clients", "email": "client@medai.sn"},
-    {"name": "Moussa Fall", "role": "Développement", "email": "dev@medai.sn"}
-]
-
-for col, member in zip(t_cols, team):
-    with col:
-        st.markdown(f"""
-        <div class="team-card">
-            <h4>{member['name']}</h4>
-            <p style="color: var(--primary);">{member['role']}</p>
-            <a href="mailto:{member['email']}" style="color: var(--secondary);">✉️ Contact</a>
-        </div>
-        """, unsafe_allow_html=True)
+        # Section équipe
+        st.markdown("---")
+        st.subheader("👥 Équipe de Support")
+        t_cols = st.columns(3)
+        team = [
+            {"name": "Dr. Alioune Ndiaye", "role": "Support Technique", "email": "tech@medai.sn"},
+            {"name": "Aminata Diop", "role": "Service Clients", "email": "client@medai.sn"},
+            {"name": "Moussa Fall", "role": "Développement", "email": "dev@medai.sn"}
+        ]
+        
+        for col, member in zip(t_cols, team):
+            with col:
+                st.markdown(f"""
+                <div class="team-card">
+                    <h4>{member['name']}</h4>
+                    <p style="color: {var(--primary)};">{member['role']}</p>
+                    <a href="mailto:{member['email']}" style="color: {var(--secondary)};">✉️ Contact</a>
+                </div>
+                """, unsafe_allow_html=True)
         
         # Section FAQ
         st.markdown("---")
@@ -189,6 +189,3 @@ for col, member in zip(t_cols, team):
                 """, unsafe_allow_html=True)
         
         st.markdown("</div>", unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    contact()
