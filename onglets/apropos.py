@@ -6,7 +6,7 @@ def a_propos():
     <style>
         :root {{
             --primary: #2563eb;
-            --secondary: #4f46e5;
+            --secondary: #1d40af;
             --accent: #22d3ee;
         }}
         
@@ -25,7 +25,7 @@ def a_propos():
             margin: 3rem 0 2rem !important;
         }}
         
-        .section-title:after {{
+        .section-title::after {{
             content: '';
             position: absolute;
             bottom: 0;
@@ -59,17 +59,17 @@ def a_propos():
             padding: 2rem;
             border-radius: 16px;
             text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
         }}
         
         .team-card:hover {{
             transform: translateY(-5px);
         }}
         
-        .team-photo {{
-            width: 150px;
-            height: 150px;
+        .member-photo {{
+            width: 160px;
+            height: 160px;
             object-fit: cover;
             border-radius: 50%;
             margin: 0 auto 1rem;
@@ -77,26 +77,11 @@ def a_propos():
             box-shadow: 0 4px 15px rgba(34, 211, 238, 0.2);
         }}
         
-        .decision-tree {{
-            padding: 2rem;
-            background: #f8fafc;
-            border-radius: 12px;
-            margin: 2rem 0;
-        }}
-        
-        .decision-step {{
-            display: flex;
-            align-items: center;
-            margin: 1rem 0;
-            padding: 1rem;
+        .protocol-diagram {{
             background: white;
-            border-radius: 8px;
-        }}
-        
-        .step-icon {{
-            font-size: 1.5rem;
-            margin-right: 1rem;
-            color: var(--primary);
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
         }}
     </style>
     """, unsafe_allow_html=True)
@@ -110,9 +95,7 @@ def a_propos():
             <h1 style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
                 Initiative Nationale de Lutte Contre H. pylori
             </h1>
-            <div style="color: #64748b; font-size: 1.1rem;">
-                Programme de recherche clinique - Université Alioune Diop de Bambey
-            </div>
+            <div style="color: var(--secondary); font-size: 1.2rem;">Depuis 2018</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -148,60 +131,67 @@ def a_propos():
                     <li>Accès à l'eau potable</li>
                     <li>Facteurs génétiques</li>
                 </ul>
-                <div style="color: #64748b; font-size: 0.9rem; margin-top: 1rem;">
-                    Source : Étude SEN-HPylori 2023
-                </div>
+                <div style="color: var(--accent); margin-top: 1rem;">Étude SEN-HPylori 2023</div>
             </div>
             """, unsafe_allow_html=True)
         with col2:
-            st.image(TEAM_IMG_PATH, use_container_width=True)
+            try:
+                st.image(TEAM_IMG_PATH, use_container_width=True)
+            except Exception as e:
+                st.error(f"Erreur de chargement de l'image : {str(e)}")
         
-        # Arbre décisionnel amélioré
-        st.markdown("<h2 class='section-title'>Protocole Diagnostique</h2>", unsafe_allow_html=True)
+        # Timeline d'infection
+        st.markdown("<h2 class='section-title'>Processus Infectieux</h2>", unsafe_allow_html=True)
         st.markdown("""
-        <div class="decision-tree">
-            <div class="decision-step">
-                <div class="step-icon">1️⃣</div>
-                <div>
-                    <h4>Patient de plus de 50 ans</h4>
-                    <p>Endoscopie digestive haute obligatoire avec biopsies</p>
-                </div>
-            </div>
-            
-            <div class="decision-step">
-                <div class="step-icon">2️⃣</div>
-                <div>
-                    <h4>Test sérologique positif</h4>
-                    <p>Test respiratoire à l'urée marquée pour confirmation</p>
-                </div>
-            </div>
-            
-            <div class="decision-step">
-                <div class="step-icon">3️⃣</div>
-                <div>
-                    <h4>Cas asymptomatique</h4>
-                    <p>Suivi clinique et contrôle à 6 mois</p>
+        <div class="data-card">
+            <div style="padding: 2rem;">
+                <div style="display: grid; gap: 1.5rem;">
+                    <div style="border-left: 3px solid var(--accent); padding-left: 1.5rem;">
+                        <h4>Contamination initiale</h4>
+                        <p style="color: #666;">Transmission oro-fécale ou par eau contaminée</p>
+                    </div>
+                    <div style="border-left: 3px solid var(--accent); padding-left: 1.5rem;">
+                        <h4>Colonisation gastrique</h4>
+                        <p style="color: #666;">Adhésion à la muqueuse gastrique en 48h</p>
+                    </div>
+                    <div style="border-left: 3px solid var(--accent); padding-left: 1.5rem;">
+                        <h4>Phase clinique</h4>
+                        <p style="color: #666;">Apparition des symptômes après 2-3 semaines</p>
+                    </div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Équipe scientifique
-        st.markdown("<h2 class='section-title'>Équipe de Recherche</h2>", unsafe_allow_html=True)
+        # Arbre décisionnel diagnostique amélioré
+        st.markdown("<h2 class='section-title'>Protocole Diagnostique</h2>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="protocol-diagram">
+            <img src="https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggVERcbiAgICBBW0JhY2ludMOpIFx1MDBhMyA1MCBhbnNdIC0tPiBCKEFkbWluaXN0cmVyIGxlIHRlc3Qgc1x1MDBjO3JvbG9naXF1ZSlcbiAgICBCIC0tPiBDe1LDqXN1bHRhdCBwb3NpdGlmfVxuICAgIEMgLS0-fE91aXwgRChFbmRvc2NvcGllKVxuICAgIEMgLS0-fE5vbnwgRShTdWl2aSBcdTAwYTIgNiBtb2lzKVxuICAgIEEgLS0-fE5vbnwgRihBZG1pbmlzdHJlciB1biB0ZXN0IHJlc3BpcmF0b2lyZSkiLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9fQ" 
+                     alt="Arbre décisionnel" 
+                     style="width:100%; border-radius:8px;">
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Équipe scientifique avec gestion des erreurs
+        st.markdown("<h2 class='section-title'>Comité Scientifique</h2>", unsafe_allow_html=True)
         st.markdown("<div class='team-grid'>", unsafe_allow_html=True)
         for member in TEAM_MEMBERS:
-            st.markdown(f"""
-            <div class="team-card">
-                <img src="{member['photo']}" class="team-photo" alt="{member['name']}">
-                <h3 style="margin: 0.5rem 0; color: var(--primary);">{member['name']}</h3>
-                <p style="color: #64748b; margin: 0.3rem 0;">{member['role']}</p>
-                <p style="color: #94a3b8; font-size: 0.9rem;">{member['Etablissement']}</p>
-                <div style="margin: 1rem 0; font-size: 1.2rem;">
-                    <a href="mailto:{member['email']}" style="color: var(--primary); margin: 0 0.5rem; text-decoration: none;">✉️</a>
-                    <a href="{member['linkedin']}" style="color: var(--primary); margin: 0 0.5rem; text-decoration: none;">🌐</a>
+            try:
+                st.markdown(f"""
+                <div class="team-card">
+                    <img src="{member['photo']}" class="member-photo" alt="{member['name']}">
+                    <h3 style="margin: 0.5rem 0; color: var(--primary);">{member['name']}</h3>
+                    <p style="color: #666; margin: 0.5rem 0;">{member['role']}</p>
+                    <p style="color: #999; font-size: 0.9rem;">{member['Etablissement']}</p>
+                    <div style="margin: 1rem 0; font-size: 1.2rem;">
+                        <a href="mailto:{member['email']}" style="color: var(--accent); margin: 0 0.5rem;">✉️</a>
+                        <a href="{member['linkedin']}" style="color: var(--accent); margin: 0 0.5rem;">🔗</a>
+                    </div>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Erreur d'affichage du membre {member['name']} : {str(e)}")
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("</div>", unsafe_allow_html=True)
