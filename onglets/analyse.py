@@ -1,5 +1,10 @@
 def analyse_descriptive():
-    # Configuration du style CSS
+    st.title("🔍 Analyse Médicale Avancée")
+    df = load_data()
+    if df.empty:
+        return
+
+    # Style CSS personnalisé
     st.markdown("""
     <style>
         :root {
@@ -8,144 +13,129 @@ def analyse_descriptive():
             --accent: #22d3ee;
         }
         
-        .eda-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-        
-        .header-card {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-        }
-        
         .metric-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
-        }
-        
-        .metric-card:hover {
-            transform: translateY(-5px);
+            padding: 1.5rem;
+            margin: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary);
         }
         
         .section-title {
             color: var(--primary);
-            border-left: 4px solid var(--accent);
-            padding-left: 1rem;
-            margin: 2rem 0;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.5rem;
+            margin: 2rem 0 !important;
+        }
+        
+        .plot-container {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
         }
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div class='eda-container'>", unsafe_allow_html=True)
+    # Section 1: Aperçu des données
+    with st.expander("📁 Aperçu des Données Brutes", expanded=True):
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.dataframe(df.head(5).style.format(precision=2), height=200)
+        with col2:
+            st.metric("Nombre de Patients", df.shape[0])
+            st.metric("Variables Analysées", df.shape[1])
+            st.download_button("📥 Exporter les Données", df.to_csv(), "donnees_medicales.csv")
     
-    # En-tête
-    st.markdown("""
-    <div class='header-card'>
-        <h1 style="margin:0; font-size:2.5rem">📈 Analyse Exploratoire des Données</h1>
-        <p style="opacity:0.9; font-size:1.1rem">Exploration interactive des données patients</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("---")
 
-    df = load_data()
-    if df.empty:
-        return
-
-    # Section aperçu des données
-    with st.expander("🔎 Aperçu des Données Brutes", expanded=True):
-        st.dataframe(df.head(10).style.set_properties(**{
-            'background-color': '#f8f9fa',
-            'color': '#212529',
-            'border': '1px solid #dee2e6'
-        })
-        st.markdown(f"""
-        <div style="padding:1rem; background:#f8f9fa; border-radius:8px; margin-top:1rem">
-            📐 Dimensions du dataset : 
-            <strong>{df.shape[0]}</strong> patients · 
-            <strong>{df.shape[1]}</strong> variables
-        </div>
-        """, unsafe_allow_html=True)
+    # Section 2: Analyse de Survie
+    st.markdown("<h2 class='section-title'>📈 Analyse de Survie Kaplan-Meier</h2>", unsafe_allow_html=True)
     
-    st.markdown("---")
+    kmf = KaplanMeierFitter()
+    kmf.fit(df["Tempsdesuivi (Mois)"], event_observed=df["Deces"])
     
-    # Section analyse démographique
-    st.markdown("<h3 class='section-title'>📌 Analyse Démographique</h3>", unsafe_allow_html=True)
-    AGE = df['AGE']
-    cols = st.columns(3)
-    stats = [
-        ("🧒 Âge Minimum", np.min(AGE)),
-        ("📊 Âge Médian", np.median(AGE)),
-        ("👴 Âge Maximum", np.max(AGE))
-    ]
-    
-    for col, (title, value) in zip(cols, stats):
-        with col:
-            st.markdown(f"""
-            <div class='metric-card'>
-                <div style="font-size:1.2rem; color:var(--primary); margin-bottom:0.5rem">{title}</div>
-                <div style="font-size:2rem; font-weight:700">{value:.1f} ans</div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # Section analyse multivariée
-    st.markdown("<h3 class='section-title'>🔍 Analyse Multivariée</h3>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        st.markdown("""
-        <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.05)">
-            <h4 style="color:var(--primary))">Paramètres d'Analyse</h4>
-            <div style="margin:1.5rem 0">
-                <div style="margin-bottom:1.5rem">
-                    <label style="display:block; margin-bottom:0.5rem">Variable Numérique</label>
-                    {st.selectbox("", df.select_dtypes(include='number').columns, key='num_var')}
-                </div>
-                <div>
-                    <label style="display:block; margin-bottom:0.5rem">Variable Catégorielle</label>
-                    {st.selectbox("", df.select_dtypes(exclude='number').columns, key='cat_var')}
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        # Boxplot interactif
-        fig = px.box(df, 
-                     x=st.session_state.cat_var, 
-                     y=st.session_state.num_var, 
-                     color=st.session_state.cat_var,
-                     color_discrete_sequence=[var(--primary), var(--secondary)])
-        st.plotly_chart(fig, use_container_width=True)
-    
-    st.markdown("---")
-    
-    # Nouvelle section : Analyse de survie
-    st.markdown("<h3 class='section-title'>⏳ Analyse de Survie</h3>", unsafe_allow_html=True)
-    
-    if time_col in df.columns and event_col in df.columns:
-        kmf = KaplanMeierFitter()
-        kmf.fit(df[time_col], df[event_col])
-        
+    with st.container():
         fig = px.line(
-            x=kmf.timeline,
-            y=kmf.survival_function_,
-            labels={'x': 'Temps (mois)', 'y': 'Probabilité de Survie'},
-            color_discrete_sequence=[var(--primary)]
+            kmf.survival_function_,
+            x=kmf.survival_function_.index,
+            y='KM_estimate',
+            labels={'x': 'Mois de suivi', 'y': 'Probabilité de survie'},
+            color_discrete_sequence=['#2e77d0']
         )
         fig.update_layout(
             hovermode="x unified",
-            title="Courbe de Kaplan-Meier"
+            title="Courbe de Survie Globale",
+            xaxis_title="Temps (mois)",
+            yaxis_title="Probabilité de Survie",
+            plot_bgcolor='rgba(240, 244, 254, 0.3)'
         )
         st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("⚠️ Colonnes de survie manquantes dans le dataset")
     
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("---")
+
+    # Section 3: Statistiques Descriptives
+    st.markdown("<h2 class='section-title'>📋 Statistiques Démographiques</h2>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        st.metric("Âge Minimum", f"{np.min(df['AGE']} ans")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        st.metric("Âge Médian", f"{np.median(df['AGE'])} ans")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        st.metric("Âge Maximum", f"{np.max(df['AGE'])} ans")
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+
+    # Section 4: Analyse des Variables
+    st.markdown("<h2 class='section-title'>📊 Exploration des Variables</h2>", unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["Distribution", "Corrélations", "Analyse Catégorielle"])
+    
+    with tab1:
+        selected_var = st.selectbox("Choisir une variable numérique", df.select_dtypes(include=np.number).columns)
+        fig = px.histogram(
+            df, 
+            x=selected_var, 
+            nbins=30, 
+            color_discrete_sequence=['#2e77d0'],
+            marginal="box"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with tab2:
+        corr_matrix = df.corr(numeric_only=True)
+        fig = px.imshow(
+            corr_matrix,
+            color_continuous_scale='RdBu',
+            zmin=-1,
+            zmax=1,
+            labels=dict(color="Corrélation")
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with tab3:
+        categorical_vars = df.select_dtypes(exclude=np.number).columns.tolist()
+        if categorical_vars:
+            selected_cat = st.selectbox("Choisir une variable catégorielle", categorical_vars)
+            counts = df[selected_cat].value_counts().reset_index()
+            fig = px.bar(
+                counts, 
+                x=selected_cat, 
+                y='count',
+                color='count',
+                color_continuous_scale=['#2e77d0', '#1d5ba6']
+            )
+            st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown("---")
+
+if __name__ == "__main__":
+    analyse_descriptive()
