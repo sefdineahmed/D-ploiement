@@ -50,7 +50,11 @@ def analyse_descriptive():
     df = load_data()
     if df.empty:
         return
-
+    # Conversion de la colonne 'Deces' en numérique
+    if df['Deces'].dtype == 'object':
+        df['Deces'] = df['Deces'].map({'OUI': 1, 'NON': 0}).astype(int)
+    else:
+        df['Deces'] = pd.to_numeric(df['Deces'], errors='coerce')
     # Section d'en-tête avec statistiques clés
     with st.container():
         st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
