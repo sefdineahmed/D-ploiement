@@ -1,3 +1,6 @@
+import streamlit as st
+from utils import TEAM_MEMBERS, TEAM_IMG_PATH
+
 def a_propos():
     st.markdown(f"""
     <style>
@@ -81,6 +84,15 @@ def a_propos():
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }}
         
+        .team-card img {{
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            border: 3px solid var(--accent);
+        }}
+        
         .badge {{
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -156,6 +168,8 @@ def a_propos():
                 <div class="badge">Étude SEN-HPylori 2023</div>
             </div>
             """, unsafe_allow_html=True)
+        with col2:
+            st.image(TEAM_IMG_PATH, use_container_width=True)
         
         # Timeline d'infection
         st.markdown("<h2 class='section-title'>Processus Infectieux</h2>", unsafe_allow_html=True)
@@ -240,23 +254,21 @@ def protocol_diagnostic():
             </div>
             """, unsafe_allow_html=True)
         
-        # Équipe scientifique
-        st.markdown("<h2 class='section-title' style='text-align: center;'>Comité Scientifique</h2>", unsafe_allow_html=True)
-        cols = st.columns(3)
-        for member, col in zip(TEAM_MEMBERS, cols):
-            with col:
-                st.markdown(f"""
-                <div class="team-card">
-                    <h3 style="margin: 0.5rem 0;">{member['name']}</h3>
-                    <p style="color: var(--primary); font-weight: 500;">{member['role']}</p>
-                    <div style="margin: 1rem 0;">
-                        <a href="mailto:{member['email']}" style="margin: 0 0.5rem;">✉️</a>
-                        <a href="{member['linkedin']}" style="margin: 0 0.5rem;">🔗</a>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+# Remplacer la section de l'équipe scientifique par :
+st.markdown("<h2 class='section-title' style='text-align: center;'>Comité Scientifique</h2>", unsafe_allow_html=True)
+cols = st.columns(3)
+for member, col in zip(TEAM_MEMBERS, cols):
+    with col:
+        st.markdown(f"""
+        <div class="team-card">
+            <h3 style="margin: 0.5rem 0; color: var(--primary);">{member['name']}</h3>
+            <p style="color: #4b5563; font-weight: 500;">{member['role']}</p>
+            <div style="margin: 1rem 0;">
+                <a href="mailto:{member['email']}" style="margin: 0 0.5rem; color: var(--secondary);">📧 Email</a>
+                <a href="{member['linkedin']}" style="margin: 0 0.5rem; color: var(--secondary);">🔗 LinkedIn</a>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     a_propos()
