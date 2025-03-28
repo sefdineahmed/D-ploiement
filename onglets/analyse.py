@@ -45,31 +45,34 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 def analyse_descriptive():
     st.title("📈 Analyse de Survie Oncologique")
     df = load_data()
     if df.empty:
         return
-    # Conversion de la colonne 'Deces' en numérique
-    if df['Deces'].dtype == 'object':
-        df['Deces'] = df['Deces'].map({'OUI': 1, 'NON': 0}).astype(int)
-    else:
-        df['Deces'] = pd.to_numeric(df['Deces'], errors='coerce')
+
+    # Conversion des variables catégorielles
+    df['Deces'] = df['Deces'].map({'OUI': 1, 'NON': 0})  # Conversion en binaire
+    df['Tempsdesuivi (Mois)'] = pd.to_numeric(df['Tempsdesuivi (Mois)'], errors='coerce')
+
     # Section d'en-tête avec statistiques clés
     with st.container():
         st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.metric("Patients", f"{len(df):,}", help="Nombre total de patients dans l'étude")
+            st.metric("Patients", f"{len(df):,}")
         with col2:
-            event_rate = df['Deces'].mean() * 100
-            st.metric("Taux de Décès", f"{event_rate:.1f}%", help="Pourcentage de décès observés")
+            event_rate = df['Deces'].mean() * 100  # Fonctionne maintenant
+            st.metric("Taux de Décès", f"{event_rate:.1f}%")
         with col3:
             median_fu = df['Tempsdesuivi (Mois)'].median()
-            st.metric("Suivi Médian", f"{median_fu:.1f} mois", help="Durée médiane de suivi")
+            st.metric("Suivi Médian", f"{median_fu:.1f} mois")
         
         st.markdown("</div>", unsafe_allow_html=True)
+
+
     
     st.markdown("---")
     
