@@ -5,7 +5,7 @@ import plotly.express as px
 from lifelines import KaplanMeierFitter
 from utils import load_data
 import matplotlib.pyplot as plt
-
+ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 def analyse_descriptive():
     st.title("🔍 Analyse Médico-Statistique")
     df = load_data()
@@ -110,6 +110,15 @@ def analyse_descriptive():
 
     # Section 4: Analyse de Survie
     st.markdown('<h3 class="section-title">⏳ Analyse de Survie Kaplan-Meier</h3>', unsafe_allow_html=True)
+   
+    # Identifier les colonnes catégoriques
+     CatCols = df.select_dtypes(include=['object']).columns
+     # Encodage des variables catégoriques
+     #Label Encoding
+     label_encoder = LabelEncoder()
+      for col in CatCols:
+                df[col] = label_encoder.fit_transform(df[col].astype(str))
+
     kmf = KaplanMeierFitter()
     
     try:
