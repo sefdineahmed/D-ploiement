@@ -66,7 +66,7 @@ st.markdown("""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_SENDER = "votre-email@gmail.com"
-EMAIL_PASSWORD = "12_SEFD"  
+EMAIL_PASSWORD = "SEFD_1956"  
 EMAIL_RECEIVER = "sefdine668@gmail.com"
 
 def send_email(name, sender_email, message):
