@@ -7,10 +7,63 @@ from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
 from utils import load_data
 import matplotlib.pyplot as plt
-
 def analyse_descriptive():
-    st.title("📊 Analyse Médico-Statistique Avancée")
+    st.title("📊 Analyse Médico-Statistique")
     df = load_data()
+    
+    # Nettoyage avancé des données avec gestion d'erreur
+    try:
+        # Conversion sécurisée du temps de suivi
+        if 'Tempsdesuivi (Mois)' in df.columns:
+            # Étape 1: Nettoyage des caractères spéciaux
+            df['Tempsdesuivi (Mois)'] = (
+                df['Tempsdesuivi (Mois)']
+                .astype(str)
+                .str.replace('[^\d,.]', '', regex=True)  # Supprime tous les caractères non numériques
+                .str.replace(',', '.')  # Convertit les virgules décimales
+                .str.strip()  # Enlève les espaces
+            )
+            
+            # Étape 2: Conversion numérique avec gestion des erreurs
+            df['Tempsdesuivi (Mois)'] = pd.to_numeric(
+                df['Tempsdesuivi (Mois)'], 
+                errors='coerce',
+                downcast='float'
+            )
+            
+            # Vérification des valeurs manquantes après conversion
+            if df['Tempsdesuivi (Mois)'].isnull().sum() > 0:
+                st.warning(f"""
+                **Alerte de données :** 
+                {df['Tempsdesuivi (Mois)'].isnull().sum()} valeurs invalides détectées dans la colonne 'Temps de suivi'.
+                Les valeurs problématiques ont été remplacées par la médiane.
+                """)
+                
+                # Remplacement par la médiane calculée de manière sécurisée
+                try:
+                    median_value = df['Tempsdesuivi (Mois)'].median(skipna=True)
+                    df['Tempsdesuivi (Mois)'].fillna(median_value, inplace=True)
+                except:
+                    st.error("Impossible de calculer la médiane - Vérifiez l'intégrité des données")
+                    return
+                
+        else:
+            st.error("Colonne 'Tempsdesuivi (Mois)' introuvable dans le dataset")
+            return
+
+        # Validation de la colonne 'Deces'
+        if 'Deces' in df.columns:
+            df['Deces'] = df['Deces'].astype(bool)
+        else:
+            st.error("Colonne 'Deces' introuvable dans le dataset")
+            return
+
+    except Exception as e:
+        st.error(f"""
+        **Erreur critique de prétraitement :** 
+        {str(e)}
+        """)
+        st.stop()
     
     # Style CSS professionnel
     st.markdown("""
