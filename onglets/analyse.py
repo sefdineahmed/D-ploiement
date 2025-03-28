@@ -156,7 +156,7 @@ def analyse_descriptive():
         # Section Analyse Comparative
         st.header("📌 Analyse Comparative par Sous-Groupes")
         group_var = st.selectbox("Variable de stratification", df.columns)
-        
+       
         if group_var in df.columns:
             groups = df[group_var].unique()
             plt.figure(figsize=(10, 6))
