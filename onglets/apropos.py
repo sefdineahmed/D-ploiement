@@ -36,6 +36,17 @@ def a_propos():
             border-radius: 2px;
         }}
         
+        .data-card {{
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease;
+        }}
+        
         .team-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -48,8 +59,8 @@ def a_propos():
             padding: 2rem;
             border-radius: 16px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         
         .team-card:hover {{
@@ -57,13 +68,35 @@ def a_propos():
         }}
         
         .team-photo {{
-            width: 200px;
-            height: 200px;
+            width: 150px;
+            height: 150px;
             object-fit: cover;
             border-radius: 50%;
             margin: 0 auto 1rem;
             border: 3px solid var(--accent);
             box-shadow: 0 4px 15px rgba(34, 211, 238, 0.2);
+        }}
+        
+        .decision-tree {{
+            padding: 2rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }}
+        
+        .decision-step {{
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+        }}
+        
+        .step-icon {{
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            color: var(--primary);
         }}
     </style>
     """, unsafe_allow_html=True)
@@ -71,14 +104,14 @@ def a_propos():
     with st.container():
         st.markdown("<div class='main-container'>", unsafe_allow_html=True)
         
-        # Section En-tête
+        # En-tête
         st.markdown("""
         <div style="text-align: center; margin: 4rem 0;">
             <h1 style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
                 Initiative Nationale de Lutte Contre H. pylori
             </h1>
-            <div style="color: #64748b; font-size: 1.2rem;">
-                Programme de recherche clinique depuis 2018
+            <div style="color: #64748b; font-size: 1.1rem;">
+                Programme de recherche clinique - Université Alioune Diop de Bambey
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -93,44 +126,79 @@ def a_propos():
         for col, stat in zip(cols, stats):
             with col:
                 st.markdown(f"""
-                <div style="text-align: center; padding: 2rem; background: #f8fafc; border-radius: 16px;">
+                <div class="data-card">
                     <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary);">
                         {stat['value']}
                     </div>
-                    <div style="color: #64748b; font-size: 1rem;">
+                    <div style="color: #64748b; font-size: 0.9rem;">
                         {stat['label']}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
         
-        # Section Processus clinique
-        st.markdown("<h2 class='section-title'>Arbre Décisionnel Diagnostique</h2>", unsafe_allow_html=True)
+        # Section Causes
+        st.markdown("<h2 class='section-title'>Étiologie et Facteurs de Risque</h2>", unsafe_allow_html=True)
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.markdown("""
+            <div class="data-card">
+                <h3 style="margin-top: 0;">Principaux déterminants</h3>
+                <ul style="padding-left: 1.5rem;">
+                    <li>Conditions socio-économiques</li>
+                    <li>Accès à l'eau potable</li>
+                    <li>Facteurs génétiques</li>
+                </ul>
+                <div style="color: #64748b; font-size: 0.9rem; margin-top: 1rem;">
+                    Source : Étude SEN-HPylori 2023
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.image(TEAM_IMG_PATH, use_container_width=True)
         
-        # Diagramme décisionnel interactif
-        decision_tree = """
-        graph TD
-            A[Patient >50 ans] -->|Oui| B[Endoscopie obligatoire]
-            A -->|Non| C{Test sérologique positif}
-            C -->|Oui| D[Test respiratoire]
-            C -->|Non| E[Suivi à 6 mois]
-        """
-        
-        st.graphviz_chart(decision_tree)
+        # Arbre décisionnel amélioré
+        st.markdown("<h2 class='section-title'>Protocole Diagnostique</h2>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="decision-tree">
+            <div class="decision-step">
+                <div class="step-icon">1️⃣</div>
+                <div>
+                    <h4>Patient de plus de 50 ans</h4>
+                    <p>Endoscopie digestive haute obligatoire avec biopsies</p>
+                </div>
+            </div>
+            
+            <div class="decision-step">
+                <div class="step-icon">2️⃣</div>
+                <div>
+                    <h4>Test sérologique positif</h4>
+                    <p>Test respiratoire à l'urée marquée pour confirmation</p>
+                </div>
+            </div>
+            
+            <div class="decision-step">
+                <div class="step-icon">3️⃣</div>
+                <div>
+                    <h4>Cas asymptomatique</h4>
+                    <p>Suivi clinique et contrôle à 6 mois</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Équipe scientifique
-        st.markdown("<h2 class='section-title' style='text-align: center; margin-top: 4rem;'>Comité Scientifique</h2>", unsafe_allow_html=True)
-        
+        st.markdown("<h2 class='section-title'>Équipe de Recherche</h2>", unsafe_allow_html=True)
         st.markdown("<div class='team-grid'>", unsafe_allow_html=True)
         for member in TEAM_MEMBERS:
             st.markdown(f"""
             <div class="team-card">
                 <img src="{member['photo']}" class="team-photo" alt="{member['name']}">
                 <h3 style="margin: 0.5rem 0; color: var(--primary);">{member['name']}</h3>
-                <p style="margin: 0; color: #6b7280; font-weight: 500;">{member['role']}</p>
-                <p style="margin: 0.5rem 0; color: #6b7280; font-size: 0.9rem;">{member['Etablissement']}</p>
-                <div style="margin-top: 1rem;">
-                    <a href="mailto:{member['email']}" style="margin: 0 0.5rem; text-decoration: none;">📧</a>
-                    <a href="{member['linkedin']}" style="margin: 0 0.5rem; text-decoration: none;">🔗</a>
+                <p style="color: #64748b; margin: 0.3rem 0;">{member['role']}</p>
+                <p style="color: #94a3b8; font-size: 0.9rem;">{member['Etablissement']}</p>
+                <div style="margin: 1rem 0; font-size: 1.2rem;">
+                    <a href="mailto:{member['email']}" style="color: var(--primary); margin: 0 0.5rem; text-decoration: none;">✉️</a>
+                    <a href="{member['linkedin']}" style="color: var(--primary); margin: 0 0.5rem; text-decoration: none;">🌐</a>
                 </div>
             </div>
             """, unsafe_allow_html=True)
