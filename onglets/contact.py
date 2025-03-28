@@ -185,8 +185,8 @@ def contact():
             </div>
         """, unsafe_allow_html=True)
 
-        # Grille principale
-        col1, col2 = st.columns([2, 1], gap="2rem")
+        # Grille principale (correction appliquée ici)
+        col1, col2 = st.columns([2, 1], gap="large")
         
         with col1:
             with st.form("contact_form"):
