@@ -118,18 +118,7 @@ def analyse_descriptive():
         st.plotly_chart(fig, use_container_width=True)
     
     st.markdown("---")
-    
-    # Section d'analyse de survie
-    st.markdown("### ⏳ Analyse de Survie Kaplan-Meier")
-    kmf = KaplanMeierFitter()
-    kmf.fit(df["Tempsdesuivi (Mois)"], df["Deces"])
-    
-    fig, ax = plt.subplots()
-    kmf.plot_survival_function(ax=ax, ci_show=st.checkbox("Afficher l'intervalle de confiance"))
-    ax.set_title('Courbe de Survie Globale')
-    ax.set_xlabel('Mois de suivi')
-    ax.set_ylabel('Probabilité de survie')
-    st.pyplot(fig)
+
     
     st.markdown("---")
     
