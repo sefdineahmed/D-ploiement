@@ -1,4 +1,5 @@
 import streamlit as st
+import os 
 from utils import TEAM_MEMBERS, TEAM_IMG_PATH
 
 def a_propos():
