@@ -101,7 +101,7 @@ def analyse_descriptive():
                 </div>
             </div>
         </div>
-        """.format(np.mean(df['SUIVI_MOIS']))), unsafe_allow_html=True)
+        """.format(np.mean(df['Tempsdesuivi (Mois)']))), unsafe_allow_html=True)
     
     st.markdown("---")
 
@@ -143,7 +143,7 @@ def analyse_descriptive():
 
     with tab3:
         kmf = KaplanMeierFitter()
-        kmf.fit(df['SUIVI_MOIS'], event_observed=df['EVENEMENT'])
+        kmf.fit(df['Tempsdesuivi (Mois)'], event_observed=df['Deces'])
         
         fig, ax = plt.subplots(figsize=(10, 6))
         kmf.plot_survival_function(ax=ax, ci_show=True, color='#2e77d0')
@@ -153,7 +153,7 @@ def analyse_descriptive():
         st.pyplot(fig)
         
         # Test du Log-Rank
-        results = logrank_test(df['SUIVI_MOIS'], df['EVENEMENT'])
+        results = logrank_test(df['Tempsdesuivi (Mois)'], df['Deces'])
         st.markdown(f"""
         <div class="analysis-card">
             <h4>📉 Analyse de Survie</h4>
