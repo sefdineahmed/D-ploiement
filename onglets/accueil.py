@@ -13,7 +13,7 @@ st.markdown(f"""
         
         .stApp {{
             background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                        url('https://raw.githubusercontent.com/sefdineahmed/MOYO/assets/img1.avif');
+                        url('assets/img1.avif');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
