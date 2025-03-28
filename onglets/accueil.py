@@ -8,48 +8,34 @@ st.markdown(f"""
         :root {{
             --primary: #6366f1;
             --secondary: #a855f7;
-            --accent: #ec4899;
-            --glass: rgba(255, 255, 255, 0.2);
+            --glass: rgba(255, 255, 255, 0.25);
         }}
         
         .stApp {{
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
-                        url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1920');
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                        url('https://raw.githubusercontent.com/sefdineahmed/MOYO/assets/img1.avif');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            min-height: 100vh;
             font-family: 'Inter', sans-serif;
+            min-height: 100vh;
         }}
         
         .hero-section {{
-            backdrop-filter: blur(16px);
-            background: var(--glass);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
             padding: 4rem 2rem;
-            margin: 4rem 0;
             position: relative;
-            overflow: hidden;
         }}
         
-        .hero-section::before {{
-            content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, 
-                var(--primary) 0%, 
-                var(--secondary) 50%, 
-                var(--accent) 100%);
-            opacity: 0.1;
-            z-index: -1;
-            animation: rotate 20s linear infinite;
-        }}
-        
-        @keyframes rotate {{
-            0% {{ transform: rotate(0deg); }}
-            100% {{ transform: rotate(360deg); }}
+        .hero-content {{
+            backdrop-filter: blur(16px) saturate(180%);
+            background: {var(--glass)};
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            padding: 4rem;
         }}
         
         .main-title {{
@@ -58,61 +44,37 @@ st.markdown(f"""
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             line-height: 1.1;
-            text-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            margin-bottom: 1.5rem;
-        }}
-        
-        .feature-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 4rem 0;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
         }}
         
         .feature-card {{
-            background: var(--glass);
-            backdrop-filter: blur(8px);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.9);
             padding: 2rem;
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            text-align: center;
         }}
         
         .feature-card:hover {{
-            transform: translateY(-8px);
-            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+            transform: translateY(-10px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
         }}
         
-        .cta-button {{
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white !important;
-            padding: 1.2rem 2.5rem;
-            border-radius: 14px;
-            font-size: 1.2rem;
-            margin: 2rem auto;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s ease;
+        .feature-icon {{
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }}
         
-        .cta-button:hover {{
-            transform: scale(1.05);
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        @keyframes float {{
+            0% {{ transform: translateY(0px); }}
+            50% {{ transform: translateY(-20px); }}
+            100% {{ transform: translateY(0px); }}
         }}
         
-        .stats-container {{
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            margin: 4rem 0;
-        }}
-        
-        .stat-card {{
-            background: var(--glass);
-            padding: 2rem;
-            border-radius: 16px;
-            text-align: center;
-            backdrop-filter: blur(8px);
+        .floating {{
+            animation: float 3s ease-in-out infinite;
         }}
     </style>
 """, unsafe_allow_html=True)
@@ -120,75 +82,76 @@ st.markdown(f"""
 def accueil():
     # Section Héro
     with st.container():
-        st.markdown("""
-            <div class='hero-section'>
-                <div style='text-align: center;'>
+        st.markdown("<div class='hero-section'>", unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 2])
+        
+        with col1:
+            if os.path.exists(LOGO_PATH):
+                st.image(LOGO_PATH, use_container_width=True)
+        
+        with col2:
+            st.markdown("""
+                <div class='hero-content'>
                     <h1 class='main-title'>
-                        Bienvenue sur MED-AI<br>
-                        <span style='font-size: 2.5rem;'>L'Intelligence Artificielle au service de la Santé</span>
+                        Bienvenue sur<br>
+                        <span style="color: #6366f1">MED-AI Precision</span>
                     </h1>
-                    <button class='cta-button'>
-                        Commencer l'Analyse ➔
+                    <p style='font-size: 1.5rem; color: #e0e7ff; margin-bottom: 3rem;'>
+                        L'innovation au service de la santé digestive
+                    </p>
+                    <div class='floating'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-down">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Section Fonctionnalités
+    with st.container():
+        st.markdown("<div style='padding: 4rem 2rem;'>", unsafe_allow_html=True)
+        cols = st.columns(3)
+        features = [
+            {"icon": "🧠", "title": "Diagnostic Intelligent", "text": "Algorithmes certifiés par l'OMS"},
+            {"icon": "📊", "title": "Analytique Avancée", "text": "Visualisations interactives en temps réel"},
+            {"icon": "🔒", "title": "Sécurité Maximale", "text": "Certifications HIPAA & GDPR"}
+        ]
+        
+        for col, feature in zip(cols, features):
+            with col:
+                st.markdown(f"""
+                    <div class='feature-card'>
+                        <div class='feature-icon'>{feature['icon']}</div>
+                        <h3>{feature['title']}</h3>
+                        <p>{feature['text']}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Section Appel à l'action
+    with st.container():
+        st.markdown("""
+            <div style='text-align: center; padding: 6rem 2rem; background: rgba(255, 255, 255, 0.9);'>
+                <h2 style='font-size: 2.5rem; margin-bottom: 2rem;'>Prêt à révolutionner votre pratique médicale ?</h2>
+                <div style='display: inline-block;'>
+                    <button style='
+                        background: linear-gradient(45deg, #6366f1, #a855f7);
+                        color: white;
+                        padding: 1.5rem 3rem;
+                        border: none;
+                        border-radius: 50px;
+                        font-size: 1.2rem;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+                    '>
+                        Commencer maintenant
                     </button>
                 </div>
             </div>
         """, unsafe_allow_html=True)
-    
-    # Statistiques impactantes
-    st.markdown("""
-        <div class='stats-container'>
-            <div class='stat-card'>
-                <h3 style='font-size: 2.5rem; margin: 0;'>+150k</h3>
-                <p>Patients analysés</p>
-            </div>
-            <div class='stat-card'>
-                <h3 style='font-size: 2.5rem; margin: 0;'>97.3%</h3>
-                <p>Précision validée</p>
-            </div>
-            <div class='stat-card'>
-                <h3 style='font-size: 2.5rem; margin: 0;'>24h</h3>
-                <p>Support médical</p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Grille de fonctionnalités
-    st.markdown("""
-        <div class='feature-grid'>
-            <div class='feature-card'>
-                <div style='font-size: 3rem; margin-bottom: 1rem;'>🧠</div>
-                <h3>Diagnostic Intelligent</h3>
-                <p>Algorithmes d'IA certifiés par l'OMS</p>
-            </div>
-            <div class='feature-card'>
-                <div style='font-size: 3rem; margin-bottom: 1rem;'>📊</div>
-                <h3>Analytique Avancée</h3>
-                <p>Visualisations interactives en temps réel</p>
-            </div>
-            <div class='feature-card'>
-                <div style='font-size: 3rem; margin-bottom: 1rem;'>🔒</div>
-                <h3>Sécurité Totale</h3>
-                <p>Certifications RGPD & HIPAA</p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Section workflow
-    with st.expander("🚀 Comment ça marche ?", expanded=True):
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            st.image(LOGO_PATH, use_container_width=True)
-        with col2:
-            st.markdown("""
-                ```python
-                # Workflow MED-AI
-                1. Import des données patient
-                2. Analyse par intelligence artificielle
-                3. Génération de rapports détaillés
-                4. Recommandations thérapeutiques
-                ```
-            """)
-            st.button("📥 Télécharger la documentation", use_container_width=True)
 
 if __name__ == "__main__":
     accueil()
