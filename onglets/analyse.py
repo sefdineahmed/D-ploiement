@@ -9,12 +9,10 @@ from utils import load_data
 import matplotlib.pyplot as plt
 
 def analyse_descriptive():
-    st.title("🔍 Analyse Médico-Statistique")
+    st.title("📊 Analyse Médico-Statistique Avancée")
     df = load_data()
-    if df.empty:
-        return
-
-    # Style CSS personnalisé
+    
+    # Style CSS professionnel
     st.markdown("""
     <style>
         :root {
@@ -32,155 +30,136 @@ def analyse_descriptive():
             border: 1px solid rgba(46, 119, 208, 0.1);
         }
         
-        .metric-card {
+        .metric-box {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             padding: 1.5rem;
             border-radius: 12px;
             text-align: center;
-        }
-        
-        .hover-card {
             transition: transform 0.3s ease;
         }
         
-        .hover-card:hover {
+        .metric-box:hover {
             transform: translateY(-5px);
         }
     </style>
     """, unsafe_allow_html=True)
 
+    # Nettoyage des données
+    try:
+        df['Tempsdesuivi (Mois)'] = df['Tempsdesuivi (Mois)'].astype(str).str.replace(',', '.').str.strip()
+        df['Tempsdesuivi (Mois)'] = pd.to_numeric(df['Tempsdesuivi (Mois)'], errors='coerce')
+        df['Deces'] = df['Deces'].astype(bool)
+        
+        if df['Tempsdesuivi (Mois)'].isnull().any():
+            st.warning("Certaines valeurs de temps de suivi sont invalides et ont été remplacées par la médiane.")
+            median_value = df['Tempsdesuivi (Mois)'].median()
+            df['Tempsdesuivi (Mois)'] = df['Tempsdesuivi (Mois)'].fillna(median_value)
+            
+    except Exception as e:
+        st.error(f"Erreur de prétraitement des données : {str(e)}")
+        return
+
     with st.container():
-        # Section Aperçu des données
-        with st.expander("📂 Exploration des Données Brutes", expanded=True):
-            st.markdown("<div class='data-card hover-card'>", unsafe_allow_html=True)
-            col1, col2 = st.columns([1, 3])
-            with col1:
+        # Section d'aperçu des données
+        with st.expander("🔍 Exploration des Données Brutes", expanded=True):
+            st.markdown("<div class='data-card'>", unsafe_allow_html=True)
+            cols = st.columns([1, 4])
+            with cols[0]:
                 st.metric("Patients", df.shape[0])
                 st.metric("Variables", df.shape[1])
-            with col2:
-                st.dataframe(df.head(5), height=200)
+            with cols[1]:
+                st.dataframe(df.head(5).style.highlight_null(color='#ffcccc')
             st.markdown("</div>", unsafe_allow_html=True)
         
         st.markdown("---")
         
-        # Section Analyse Démographique
-        st.header("📊 Profil Démographique")
-        cols = st.columns(3)
-        age_stats = {
-            "min": np.min(df['AGE']),
-            "med": np.median(df['AGE']),
-            "max": np.max(df['AGE'])
-        }
+        # Analyse de survie
+        st.header("📈 Analyse de Survie Kaplan-Meier")
+        cols = st.columns([2, 1])
         
         with cols[0]:
-            st.markdown("<div class='metric-card hover-card'>", unsafe_allow_html=True)
-            st.metric("Âge Minimum", f"{age_stats['min']} ans")
+            st.markdown("<div class='data-card'>", unsafe_allow_html=True)
+            kmf = KaplanMeierFitter()
+            kmf.fit(df["Tempsdesuivi (Mois)"], df["Deces"])
+            
+            fig = px.line(
+                kmf.survival_function_.reset_index(),
+                x='timeline',
+                y='KM_estimate',
+                labels={'timeline': 'Mois de suivi', 'KM_estimate': 'Probabilité de survie'},
+                color_discrete_sequence=['#2e77d0']
+            )
+            fig.add_hline(y=0.5, line_dash="dot", annotation_text="Survie médiane")
+            st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
         
         with cols[1]:
-            st.markdown("<div class='metric-card hover-card'>", unsafe_allow_html=True)
-            st.metric("Âge Médian", f"{age_stats['med']} ans")
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with cols[2]:
-            st.markdown("<div class='metric-card hover-card'>", unsafe_allow_html=True)
-            st.metric("Âge Maximum", f"{age_stats['max']} ans")
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        # Section Analyse Survie
-        st.header("📈 Analyse de Survie")
-        kmf = KaplanMeierFitter()
-        kmf.fit(df["Tempsdesuivi (Mois)"], df["Deces"])
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("<div class='data-card hover-card'>", unsafe_allow_html=True)
-            st.subheader("Courbe de Kaplan-Meier")
-            fig = px.line(
-                kmf.survival_function_,
-                x=kmf.survival_function_.index,
-                y=kmf.survival_function_['KM_estimate'],
-                labels={'x': 'Mois', 'y': 'Probabilité de Survie'},
-                color_discrete_sequence=['#2e77d0']
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("<div class='data-card hover-card'>", unsafe_allow_html=True)
-            st.subheader("Statistiques Clés")
+            st.markdown("<div class='data-card'>", unsafe_allow_html=True)
+            st.subheader("Indicateurs Clés")
             st.metric("Survie Médiane", f"{kmf.median_survival_time_:.1f} mois")
-            st.write(f"**Patients à risque à 12 mois:** {kmf.predict(12):.0%}")
-            st.write(f"**Patients à risque à 24 mois:** {kmf.predict(24):.0%}")
+            st.metric("Taux de Censure", f"{1 - df['Deces'].mean():.1%}")
+            st.metric("Suivi Moyen", f"{df['Tempsdesuivi (Mois)'].mean():.1f} mois")
             st.markdown("</div>", unsafe_allow_html=True)
         
         st.markdown("---")
         
-        # Section Analyse Multivariée
+        # Analyse multivariée
         st.header("🧮 Analyse Multidimensionnelle")
-        col1, col2 = st.columns(2)
+        cols = st.columns(2)
         
-        with col1:
-            st.markdown("<div class='data-card hover-card'>", unsafe_allow_html=True)
+        with cols[0]:
+            st.markdown("<div class='data-card'>", unsafe_allow_html=True)
             st.subheader("Distribution des Variables")
-            selected_var = st.selectbox("Sélectionner une variable", df.columns)
-            fig = px.histogram(
-                df, 
-                x=selected_var, 
-                color_discrete_sequence=['#2e77d0'],
-                nbins=20
-            )
+            selected_var = st.selectbox("Sélectionnez une variable", df.columns)
+            
+            if df[selected_var].dtype == 'object':
+                fig = px.pie(df, names=selected_var, hole=0.3)
+            else:
+                fig = px.histogram(df, x=selected_var, nbins=20, 
+                                 color_discrete_sequence=['#2e77d0'])
+            
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
         
-        with col2:
-            st.markdown("<div class='data-card hover-card'>", unsafe_allow_html=True)
-            st.subheader("Interactions Variables")
-            numeric_df = df.select_dtypes(include=["number"])
+        with cols[1]:
+            st.markdown("<div class='data-card'>", unsafe_allow_html=True)
+            st.subheader("Matrice de Corrélation")
+            numeric_df = df.select_dtypes(include=np.number)
             corr_matrix = numeric_df.corr()
+            
             fig = px.imshow(
                 corr_matrix,
-                color_continuous_scale='RdBu_r',
-                labels={"color": "Corrélation"},
-                aspect="auto"
+                color_continuous_scale='RdBu',
+                zmin=-1,
+                zmax=1,
+                labels=dict(color="Corrélation")
             )
-            fig.update_layout(coloraxis_showscale=False)
+            fig.update_layout(height=500)
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
         
         st.markdown("---")
         
-        # Section Analyse Comparative
-        st.header("📌 Analyse Comparative par Sous-Groupes")
-        group_var = st.selectbox("Variable de stratification", df.columns)
-       
-        if group_var in df.columns:
-            groups = df[group_var].unique()
-            plt.figure(figsize=(10, 6))
-            
-            for group in groups:
-                mask = df[group_var] == group
-                kmf.fit(df[mask]["Tempsdesuivi (Mois)"], df[mask]["Deces"])
-                plt.step(kmf.timeline, kmf.survival_function_, 
-                        label=f"{group_var} = {group}")
-            
-            plt.xlabel("Temps (Mois)")
-            plt.ylabel("Probabilité de Survie")
-            plt.title("Courbes de Survie Comparées")
-            plt.legend()
-            st.pyplot(plt)
-            
-            # Test du Log-Rank
-            results = logrank_test(
-                df[df[group_var]==groups[0]]["Tempsdesuivi (Mois)"],
-                df[df[group_var]==groups[1]]["Tempsdesuivi (Mois)"],
-                df[df[group_var]==groups[0]]["Deces"],
-                df[df[group_var]==groups[1]]["Deces"]
+        # Analyse comparative
+        st.header("📌 Analyse Stratifiée")
+        group_var = st.selectbox("Choisir une variable de stratification", 
+                               df.select_dtypes(exclude='number').columns)
+        
+        if group_var:
+            st.markdown("<div class='data-card'>", unsafe_allow_html=True)
+            fig = px.area(
+                pd.pivot_table(
+                    df,
+                    index='Tempsdesuivi (Mois)',
+                    columns=group_var,
+                    values='Deces',
+                    aggfunc='mean'
+                ).cumsum(),
+                color_discrete_sequence=px.colors.qualitative.Pastel
             )
-            st.write(f"**Test du Log-Rank:** p-value = {results.p_value:.4f}")
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     analyse_descriptive()
