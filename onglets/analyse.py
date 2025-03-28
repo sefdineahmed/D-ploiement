@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-import pandas as pd
+import pandas as pd  # Import manquant ajouté ici
 import plotly.express as px
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
@@ -45,7 +45,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 
 def analyse_descriptive():
     st.title("📈 Analyse de Survie Oncologique")
